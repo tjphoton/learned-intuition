@@ -13,9 +13,12 @@ A book + 2-day hands-on workshop, currently in the research and curriculum-build
 ## In this repo
 
 - **`index.html`** — the study plan (the page linked above). Self-contained, no build step, no external dependencies.
+- **`papers/`** — one page per paper (51), each with a summary, a link to the PDF, and space for study notes and discussion that fills in over time as papers get read.
 - **`PAPERS_SUMMARY.md`** — the same library indexed by folder instead of by reading order, with fuller per-paper notes.
 - **`AGENTS.md`** — conventions for extending this library (paper naming, verification checklist, how the files stay in sync).
+- **`assets/`** — the shared design system (CSS + theme toggle) used by every page here.
 
 ## Not in this repo
 
-The PDFs themselves and a handful of cloned reference implementations (`sbi`, PFNs, Karpathy's `autoresearch`, etc.) are kept local-only — partly size (~800MB combined), partly because not every paper here is under a license that permits third-party redistribution, even where it's freely readable at the source. `PAPERS_SUMMARY.md` has the arXiv ID / DOI for every entry, and `AGENTS.md` has the repo URLs, so the full local library is reproducible from what's committed here.
+- **The PDFs** live in a separate private repo. Not every paper here is under a license that permits third-party redistribution, even where it's freely readable at the source — so the actual files are personal storage, not published. `PAPERS_SUMMARY.md` has the arXiv ID / DOI for every entry if you want to track one down yourself.
+- **Cloned reference implementations** (`sbi`, PFNs, Karpathy's `autoresearch`, etc.) — only each one's `README.md` is kept, as a pointer. `AGENTS.md` has the repo URLs.

@@ -16,11 +16,36 @@ Originating context (pharma Marketing Mix Modeling) is in `research.md`. The pro
 
 | File | Role | Update when |
 |---|---|---|
-| `research.md` | Raw scoping conversation / transcript. Historical record, **not** curated. | Never edit — it's a record of how the project started. |
+| `research.md` | Raw scoping conversation / transcript. Historical record, **not** curated. Gitignored — local only, not on GitHub (may reference business context). | Never edit — it's a record of how the project started. |
 | `PAPERS_SUMMARY.md` | Folder-indexed reference. One entry per paper/repo, grouped by where it physically lives on disk. | Every time a paper or repo is added, removed, or reclassified. |
-| `index.html` | Sequenced reading path. Same papers, reorganized by learning order into Parts/Modules, with a working progress tracker (localStorage), search, and pillar filters. | Every time `PAPERS_SUMMARY.md` changes — **the two must stay in sync**, see below. |
+| `index.html` | Sequenced reading path. Same papers, reorganized by learning order into Parts/Modules, with a working progress tracker (localStorage), search, and pillar filters. Card titles link out to `papers/<slug>.html`. | Every time `PAPERS_SUMMARY.md` changes — **the two must stay in sync**, see below. |
+| `papers/<slug>.html` | One page per paper (51 total). Summary (mirrors the card), a link to the actual PDF in the private `learned-intuition-library` repo, and two sections meant to be filled in over time: **Study Notes** and **Discussion, Section by Section**. | Created once per paper via the generator script (see below); notes/discussion sections get hand-edited as papers actually get read/discussed. |
+| `assets/theme.css`, `assets/theme.js`, `assets/paper.css` | Shared design tokens, theme-toggle logic, and paper-page layout — used by `index.html` and every `papers/*.html`. One `localStorage` key (`learned-intuition-theme`) keeps the light/dark choice consistent across all 52 pages. | Only when changing the design system itself — never duplicate these into an individual page. |
 
-`index.html` is self-contained (no external fonts, no CDN, no network calls) — it must stay that way so it works offline and is safe to publish as a static page.
+All HTML pages in this repo are dependency-free (no external fonts, no CDN, no network calls except the outbound PDF links) — keep it that way so the site works offline and as a zero-build static site.
+
+### The private PDF library
+
+The actual PDFs live in a **separate private repo**, `tjphoton/learned-intuition-library`, not in this (public) repo — see "Git & GitHub conventions" below for why. Its folder structure is an exact mirror of this repo's paper folders (`Bayesian-Optimization/`, `Simulation-Based-Inference/<NN-name>/`, `Agentic-Research-and-Autonomous-Optimization/<NN-name>/`). Each `papers/<slug>.html` page's "Open PDF" button points to:
+
+```
+https://github.com/tjphoton/learned-intuition-library/blob/main/<url-encoded-relative-path>
+```
+
+Since that repo is private, this link only resolves for whoever is logged into GitHub with access (i.e. the owner) — that's intentional, not a bug.
+
+### Regenerating paper pages
+
+`papers/*.html` are generated, not hand-written, from the card markup already in `index.html` (title, meta line, and summary are extracted directly — never retyped, to avoid drift) plus a slug → PDF-path mapping. When adding a new paper, after step 6 below, also:
+
+1. Add the new PDF to the private library repo (`learned-intuition-library`), same relative path convention as this repo's folders.
+2. Add its slug → path entry to the mapping (see git history for `generate_papers.py` if it's not still in the repo — it was run from a scratch location, not committed, since it's a one-shot generator, not a maintained tool. If regenerating many pages at once in the future, it's worth re-creating a small script like it rather than hand-writing pages — the per-card regex extraction from `index.html` is what keeps title/meta/summary text from drifting out of sync between the two.).
+3. Generate `papers/<slug>.html` following the existing template pattern (see any existing file in `papers/` for the exact structure: `<!-- NOTES:START -->` / `<!-- NOTES:END -->` and `<!-- DISCUSSION:START -->` / `<!-- DISCUSSION:END -->` HTML comments mark where hand-written content goes later — keep those markers, they're the reliable edit anchors).
+4. Wrap the new card's `<h4>Title</h4>` in `index.html` with `<a href="papers/<slug>.html">Title</a>`.
+
+### Filling in Study Notes / Discussion sections
+
+When a paper actually gets read or discussed in a session, edit its `papers/<slug>.html` directly — replace the placeholder `<p class="placeholder">` between the `<!-- NOTES:START -->`/`<!-- DISCUSSION:START -->` markers with real content (use `<h3>` per section/topic, `<p>`/`<ul>` for the actual notes). This is hand-authored per paper as it happens, not batch-generated.
 
 ## Adding a new paper — the checklist
 
@@ -63,9 +88,10 @@ grep -rl "Simulation_Bayesian_Research\|Simulation Bayesian Research" . --includ
 
 ## Git & GitHub conventions
 
-- **PDFs and `repos/` are gitignored — local only, never committed.** Two reasons: (1) size — `repos/` alone is ~570MB of other people's cloned code, PDFs run another ~250MB; (2) redistribution rights — several of these papers (Nature articles, conference proceedings, some arXiv preprints) are not under licenses that permit a third party to republish them, even though they're freely viewable at the source. Only the *original analysis and organization* (this repo's actual content) gets published, not the underlying papers.
-- To reconstitute `repos/` on a fresh clone: see the repo URLs in the `## Code repositories` table in `PAPERS_SUMMARY.md`.
-- To reconstitute the PDF library: re-run the acquisition process per paper (arXiv ID / DOI is recorded in both `PAPERS_SUMMARY.md` and each card's `.meta` line in `index.html`).
+- **This repo (`learned-intuition`) is public.** It holds the site (`index.html`, `papers/`, `assets/`), the reference docs, and one `README.md` pointer per cloned repo under `repos/<name>/` — never the actual PDFs or full repo clones.
+- **The PDFs live in a separate private repo, `learned-intuition-library`.** Reason: several of these papers (Nature articles, conference proceedings, some arXiv preprints) are not under licenses that permit a third party to *publicly* republish them, even though they're freely viewable at the source — a private repo is personal storage, not publication, which is a meaningfully different act. Its folder structure mirrors this repo's paper folders exactly; see "The private PDF library" above for how `papers/*.html` link to it.
+- **`repos/*/` (cloned reference implementations) are trimmed to just `README.md`.** The actual code is other people's, easily re-cloned from the URLs in `PAPERS_SUMMARY.md`'s `## Code repositories` table — no need to republish it either. `.gitignore` enforces this: `repos/*/*` is ignored except `repos/*/README.md`.
+- To reconstitute a full local working copy: clone this repo, clone `learned-intuition-library` alongside it (or wherever `papers/*.html`'s links expect it — currently hardcoded to `github.com/tjphoton/learned-intuition-library`), and re-clone each `repos/<name>/` from the URLs in `PAPERS_SUMMARY.md`.
 - Commit messages: describe what changed in the library/curriculum (e.g. "add AlphaLab + Barbarians at the Gate to evolutionary-search module"), not generic "update files."
 - Never force-push. Never rewrite history on this repo without being asked.
 

@@ -1,94 +1,8 @@
 <title>Learned Intuition — A Study Plan for Simulation-Based Inference, Bayesian Optimization &amp; Agentic Research</title>
 <meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="assets/theme.css">
 <style>
-  :root {
-    --bg: #f4f5fa;
-    --surface: #ffffff;
-    --surface-2: #eceef7;
-    --fg: #14151f;
-    --muted: #565a72;
-    --faint: #8488a3;
-    --line: #d8dae6;
-    --line-strong: #b7bbd4;
-    --sbi: #3d4f99;
-    --sbi-wash: #e7e9f7;
-    --bo: #187a68;
-    --bo-wash: #e2f2ee;
-    --agentic: #96631f;
-    --agentic-wash: #f6ecd9;
-    --radius: 3px;
-    --serif: "Iowan Old Style", "Palatino Linotype", "Sitka Text", Georgia, "Times New Roman", serif;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
-    --fs-xs: 0.72rem;
-    --fs-sm: 0.83rem;
-    --fs-base: 1.03rem;
-    --fs-md: 1.2rem;
-    --fs-lg: 1.55rem;
-    --fs-xl: 2.05rem;
-    --fs-xxl: 2.6rem;
-    --sidebar-w: 300px;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #101120;
-      --surface: #171827;
-      --surface-2: #1d1f33;
-      --fg: #e9eaf5;
-      --muted: #a4a7c4;
-      --faint: #6c6f8e;
-      --line: #2a2c45;
-      --line-strong: #3c3f60;
-      --sbi: #8b9bec;
-      --sbi-wash: #22264a;
-      --bo: #57c4a7;
-      --bo-wash: #123330;
-      --agentic: #dba14e;
-      --agentic-wash: #3a2c16;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #101120; --surface: #171827; --surface-2: #1d1f33; --fg: #e9eaf5; --muted: #a4a7c4; --faint: #6c6f8e;
-    --line: #2a2c45; --line-strong: #3c3f60; --sbi: #8b9bec; --sbi-wash: #22264a; --bo: #57c4a7; --bo-wash: #123330;
-    --agentic: #dba14e; --agentic-wash: #3a2c16;
-  }
-  :root[data-theme="light"] {
-    --bg: #f4f5fa; --surface: #ffffff; --surface-2: #eceef7; --fg: #14151f; --muted: #565a72; --faint: #8488a3;
-    --line: #d8dae6; --line-strong: #b7bbd4; --sbi: #3d4f99; --sbi-wash: #e7e9f7; --bo: #187a68; --bo-wash: #e2f2ee;
-    --agentic: #96631f; --agentic-wash: #f6ecd9;
-  }
-
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  }
-
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: var(--sans);
-    font-size: var(--fs-base);
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 600; margin: 0; text-wrap: balance; }
-  p { margin: 0; }
-  a { color: inherit; }
-
-  .mono { font-family: var(--mono); }
-  .tnum { font-variant-numeric: tabular-nums; }
-  .eyebrow {
-    font-family: var(--mono);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
+  :root { --sidebar-w: 300px; }
 
   /* ---------- layout shell ---------- */
   .shell { display: flex; align-items: flex-start; max-width: 1320px; margin: 0 auto; }
@@ -147,19 +61,6 @@
   }
   .stat .n { font-family: var(--mono); font-size: 1.5rem; font-variant-numeric: tabular-nums; color: var(--fg); }
   .stat .l { font-family: var(--mono); font-size: var(--fs-xs); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
-
-  /* ---------- theme toggle ---------- */
-  .theme-toggle {
-    position: fixed; top: 1.2rem; right: 1.4rem; z-index: 20;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
-    width: 2.15rem; height: 2.15rem; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; color: var(--muted);
-  }
-  .theme-toggle:hover { color: var(--fg); border-color: var(--line-strong); }
-  .theme-toggle:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible {
-    outline: 2px solid var(--sbi); outline-offset: 2px;
-  }
-  .theme-toggle svg { width: 1.05rem; height: 1.05rem; }
 
   /* ---------- sidebar contents ---------- */
   .side-block { margin-bottom: 1.6rem; }
@@ -241,6 +142,8 @@
   .card-heading { flex: 1 1 auto; min-width: 0; }
   .card-order { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); margin-right: 0.4rem; }
   .card h4 { display: inline; font-size: var(--fs-md); line-height: 1.35; }
+  .card h4 a { text-decoration: none; color: var(--fg); border-bottom: 1px solid transparent; }
+  .card h4 a:hover { border-bottom-color: var(--faint); }
   .card .meta {
     font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem;
     display: flex; flex-wrap: wrap; gap: 0.35rem 0.55rem;
@@ -404,7 +307,7 @@
         <p class="module-why">The physics/astro lineage calls it <em>simulation-based inference</em>; the stats/cog-sci lineage calls it <em>amortized Bayesian inference</em>; the AutoML lineage calls it a <em>prior-data fitted network</em>. Same math, three papers below that each speak a different dialect of it — and one that translates between all three.</p>
         <div class="cards">
           <div class="card pillar-sbi core" data-card data-pillar="sbi" data-title="The Frontier of Simulation-Based Inference Cranmer Brehmer Louppe 2020">
-            <div class="card-top"><div class="card-heading"><h4>The Frontier of Simulation-Based Inference</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/cranmer.html">The Frontier of Simulation-Based Inference</a></h4>
               <div class="meta"><span>Cranmer, Brehmer, Louppe</span><span>·</span><span class="tnum">2020</span><span>·</span><span>PNAS</span><span class="tag">read first</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-cranmer"><label for="p-cranmer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -412,7 +315,7 @@
           </div>
 
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Neural Methods for Amortized Inference Zammit-Mangion Sainsbury-Dale Huser 2025">
-            <div class="card-top"><div class="card-heading"><h4>Neural Methods for Amortized Inference</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/zammit.html">Neural Methods for Amortized Inference</a></h4>
               <div class="meta"><span>Zammit-Mangion, Sainsbury-Dale, Huser</span><span>·</span><span class="tnum">2025</span><span>·</span><span>Annual Review of Statistics</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-zammit"><label for="p-zammit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -435,49 +338,49 @@
         <p class="module-why">One idea, one paper of origin, then the entire tabular-foundation-model line that proves it scales. <span class="core">Read Müller et al. before TabPFN</span> — it's the mechanism; TabPFN is the scaled-up, benchmark-beating application of it.</p>
         <div class="cards">
           <div class="card pillar-sbi core" data-card data-pillar="sbi" data-title="Transformers Can Do Bayesian Inference Muller Hollmann Pineda Grabocka Hutter 2022 PFN">
-            <div class="card-top"><div class="card-heading"><h4>Transformers Can Do Bayesian Inference</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/tcdbi.html">Transformers Can Do Bayesian Inference</a></h4>
               <div class="meta"><span>Müller, Hollmann, Pineda, Grabocka, Hutter</span><span>·</span><span class="tnum">2022</span><span>·</span><span>ICLR</span><span class="id">2112.10510</span><span class="tag">origin</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-tcdbi"><label for="p-tcdbi"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">The origin paper for Prior-Data Fitted Networks: train a transformer via in-context learning to approximate Bayesian inference over a prior, in one forward pass. TabPFN, Do-PFN, and CausalPFN all inherit this recipe directly. Shows PFNs near-perfectly mimicking Gaussian-process posteriors with 200×+ speedups.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="TabPFN Accurate predictions on small data with a tabular foundation model Hollmann Nature 2025">
-            <div class="card-top"><div class="card-heading"><h4>TabPFN: Accurate Predictions on Small Data</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/tabpfn.html">TabPFN: Accurate Predictions on Small Data</a></h4>
               <div class="meta"><span>Hollmann, Müller, Purucker, et al.</span><span>·</span><span class="tnum">2025</span><span>·</span><span>Nature</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-tabpfn"><label for="p-tabpfn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">The paradigm-proof: a transformer trained on ~130M synthetic tasks does in-context learning over tabular data — one forward pass beats an ensemble of GBTs tuned for 4 hours. The empirical backbone of this whole library's thesis.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="TabPFN-2.5 Prior Labs 2025">
-            <div class="card-top"><div class="card-heading"><h4>TabPFN-2.5</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/tabpfn25.html">TabPFN-2.5</a></h4>
               <div class="meta"><span>Prior Labs</span><span>·</span><span class="tnum">2025</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-tabpfn25"><label for="p-tabpfn25"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Scale-up: 50,000 rows / 2,000 features — a 20× increase in data cells over TabPFN v2.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="TabPFN-3 Prior Labs 2026">
-            <div class="card-top"><div class="card-heading"><h4>TabPFN-3: Technical Report</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/tabpfn3.html">TabPFN-3: Technical Report</a></h4>
               <div class="meta"><span>Prior Labs</span><span>·</span><span class="tnum">2026</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-tabpfn3"><label for="p-tabpfn3"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Scales to 1M training rows, adds a "Thinking" test-time-compute mode, extends to time-series, relational, and tabular-text data.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="TabPFN-v2 Time Series Hoo Muller 2026">
-            <div class="card-top"><div class="card-heading"><h4>From Tables to Time: TabPFN-v2 for Time Series</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/tabpfnts.html">From Tables to Time: TabPFN-v2 for Time Series</a></h4>
               <div class="meta"><span>Hoo, Müller</span><span>·</span><span class="tnum">2026</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-tabpfnts"><label for="p-tabpfnts"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Ports the tabular in-context-learning recipe to covariate-informed forecasting — external regressors like weather or economic indicators folded directly into the context.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="TabICLv2 Qu Holzmuller Varoquaux Le Morvan 2026 SOTA">
-            <div class="card-top"><div class="card-heading"><h4>TabICLv2</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/tabiclv2.html">TabICLv2</a></h4>
               <div class="meta"><span>Qu, Holzmüller, Varoquaux, Le Morvan</span><span>·</span><span class="tnum">2026</span><span class="tag">current SOTA</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-tabiclv2"><label for="p-tabiclv2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Current open SOTA on TabArena, beating tuned CatBoost/XGBoost and RealTabPFN-2.5 with no dataset-specific tuning. Query-Aware Scalable Softmax fixes attention fading at scale; disk-offloading gets million-row tables onto modest GPUs; 999-quantile regression gives full predictive distributions, not point estimates.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Effortless Simulation-Efficient Bayesian Inference using Tabular Foundation Models Vetter Gloeckler Gedon Macke 2025">
-            <div class="card-top"><div class="card-heading"><h4>Effortless, Simulation-Efficient Bayesian Inference via TFMs</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/effortless.html">Effortless, Simulation-Efficient Bayesian Inference via TFMs</a></h4>
               <div class="meta"><span>Vetter, Gloeckler, Gedon, Macke</span><span>·</span><span class="tnum">2025</span><span>·</span><span>NeurIPS</span><span class="tag">shortcut</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-effortless"><label for="p-effortless"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -492,56 +395,56 @@
         <p class="module-why">The libraries and worked examples you'd actually build with. <span class="core">metabeta is the dress rehearsal for an amortized hierarchical regression model</span> — read it closely, it's structurally the closest thing here to a Marketing Mix Model.</p>
         <div class="cards">
           <div class="card pillar-sbi core" data-card data-pillar="sbi" data-title="metabeta A fast neural model for Bayesian Mixed-Effects Regression Kipnis Binz Schulz 2025">
-            <div class="card-top"><div class="card-heading"><h4>metabeta: Bayesian Mixed-Effects Regression</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/metabeta.html">metabeta: Bayesian Mixed-Effects Regression</a></h4>
               <div class="meta"><span>Kipnis, Binz, Schulz</span><span>·</span><span class="tnum">2025</span><span class="tag">dress rehearsal</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-metabeta"><label for="p-metabeta"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">The closest existing analog to an amortized Marketing Mix Model — hierarchical (fixed + random effects) regression via neural posterior estimation, matching HMC accuracy at ~0.01s vs ~37s. Local + global summary networks, normalizing-flow posteriors, plus post-hoc importance sampling and conformal prediction for calibration.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="BayesFlow Amortized Bayesian Workflows with Neural Networks Radev Schmitt Schumacher 2023">
-            <div class="card-top"><div class="card-heading"><h4>BayesFlow</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/bayesflow1.html">BayesFlow</a></h4>
               <div class="meta"><span>Radev, Schmitt, Schumacher, et al.</span><span>·</span><span class="tnum">2023</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-bayesflow1"><label for="p-bayesflow1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Original BayesFlow paper. Establishes the prior → simulator → summary network → inference network pipeline and the "amortized Bayesian workflow" framing everything after it uses.</p>
           </div>
           <div class="card pillar-sbi core" data-card data-pillar="sbi" data-title="BayesFlow 2 Multi-Backend Amortized Bayesian Inference in Python Kuhmichel 2026">
-            <div class="card-top"><div class="card-heading"><h4>BayesFlow 2</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/bayesflow2.html">BayesFlow 2</a></h4>
               <div class="meta"><span>Kühmichel, et al.</span><span>·</span><span class="tnum">2026</span><span class="tag">workhorse</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-bayesflow2"><label for="p-bayesflow2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Major rewrite on Keras 3 (JAX/PyTorch/TensorFlow). Adds diffusion/flow-matching/consistency-model inference networks, native hierarchical model support, and a first-class Diagnostics module. The primary coding-exercise tool for the ABI half of a workshop.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="sbi A toolkit for simulation-based inference Tejero-Cantero Boelts Deistler 2020 JOSS">
-            <div class="card-top"><div class="card-heading"><h4>sbi: A Toolkit for Simulation-Based Inference</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/sbi.html">sbi: A Toolkit for Simulation-Based Inference</a></h4>
               <div class="meta"><span>Tejero-Cantero, Boelts, Deistler, et al.</span><span>·</span><span class="tnum">2020</span><span>·</span><span>JOSS</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-sbi"><label for="p-sbi"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">The other major SBI library (Macke lab, PyTorch). Lower-level than BayesFlow — exposes the density-estimator choice directly (NPE / NLE / NRE families) instead of one high-level API.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="sbi reloaded a toolkit for simulation-based inference workflows Boelts Deistler Gloeckler 2025">
-            <div class="card-top"><div class="card-heading"><h4>sbi reloaded</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/sbireloaded.html">sbi reloaded</a></h4>
               <div class="meta"><span>Boelts, Deistler, Gloeckler, Tejero-Cantero, et al.</span><span>·</span><span class="tnum">2025</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-sbireloaded"><label for="p-sbireloaded"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Major rewrite of <span class="mono">sbi</span>, expanding from an algorithm library into a full workflow toolkit — mirrors BayesFlow 2's own evolution. The two production-grade ABI frameworks, side by side.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Amortized Bayesian Mixture Models Kucharsky Burkner 2025">
-            <div class="card-top"><div class="card-heading"><h4>Amortized Bayesian Mixture Models</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/mixture.html">Amortized Bayesian Mixture Models</a></h4>
               <div class="meta"><span>Kucharský, Bürkner</span><span>·</span><span class="tnum">2025</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-mixture"><label for="p-mixture"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">A worked ABI-workflow example on finite mixture models (label-switching, high-dim posteriors) — a gentler second exercise before metabeta-level hierarchy.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Simformer All-in-one simulation-based inference Gloeckler Deistler Weilbach Wood Macke 2024">
-            <div class="card-top"><div class="card-heading"><h4>Simformer: All-in-One SBI</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/simformer.html">Simformer: All-in-One SBI</a></h4>
               <div class="meta"><span>Gloeckler, Deistler, Weilbach, Wood, Macke</span><span>·</span><span class="tnum">2024</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-simformer"><label for="p-simformer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Transformer-based SBI that handles missing data and flexible conditioning via masking — condition on any subset of parameters or data at inference time. Real commercial panels are rarely complete; this is that exercise.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Diffusion Models in Simulation-Based Inference A Tutorial Review Arruda Bracher Kothe Hasenauer 2025">
-            <div class="card-top"><div class="card-heading"><h4>Diffusion Models in SBI: A Tutorial Review</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/diffusion.html">Diffusion Models in SBI: A Tutorial Review</a></h4>
               <div class="meta"><span>Arruda, Bracher, Köthe, Hasenauer</span><span>·</span><span class="tnum">2025</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-diffusion"><label for="p-diffusion"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -556,28 +459,28 @@
         <p class="module-why"><span class="core">Do not skip this module.</span> A fast posterior that's quietly wrong is worse than a slow one that's honest — for a decision feeding real budget, overconfidence is the failure mode that looks right and isn't.</p>
         <div class="cards">
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Validating Bayesian Inference Algorithms with Simulation-Based Calibration Talts Betancourt Simpson Vehtari Gelman 2018">
-            <div class="card-top"><div class="card-heading"><h4>Simulation-Based Calibration</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/sbc.html">Simulation-Based Calibration</a></h4>
               <div class="meta"><span>Talts, Betancourt, Simpson, Vehtari, Gelman</span><span>·</span><span class="tnum">2018</span><span class="tag">diagnostic standard</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-sbc"><label for="p-sbc"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">The diagnostic standard. Simulate parameters → simulate data → run inference → check that rank statistics of the true parameter within the recovered posterior are uniform. Any amortized model bound for a real decision needs this before it's trusted. Hands-on exercise: implement the rank histogram from scratch.</p>
           </div>
           <div class="card pillar-sbi core" data-card data-pillar="sbi" data-title="A Trust Crisis in Simulation-Based Inference Your Posterior Approximations Can Be Unfaithful Hermans Delaunoy 2022 TMLR">
-            <div class="card-top"><div class="card-heading"><h4>A Trust Crisis in Simulation-Based Inference?</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/trustcrisis.html">A Trust Crisis in Simulation-Based Inference?</a></h4>
               <div class="meta"><span>Hermans, Delaunoy, et al.</span><span>·</span><span class="tnum">2022</span><span>·</span><span>TMLR</span><span class="tag">load-bearing</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-trustcrisis"><label for="p-trustcrisis"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Nearly every SBI algorithm tested (NPE, SNL, …) produced overconfident posteriors — credible intervals too narrow — in at least one benchmark, worst exactly in the low-simulation-budget regime where amortized methods are most tempting to reach for. Remedy: deep ensembling, 5+ independently trained networks, to separate epistemic from aleatoric uncertainty.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Calibrating Neural SBI with Differentiable Coverage Probability Falkiewicz Takeishi Shekhzadeh Wehenkel Delaunoy Louppe Kalousis 2023">
-            <div class="card-top"><div class="card-heading"><h4>Calibrating Neural SBI with Differentiable Coverage</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/coverage.html">Calibrating Neural SBI with Differentiable Coverage</a></h4>
               <div class="meta"><span>Falkiewicz, Takeishi, Shekhzadeh, et al.</span><span>·</span><span class="tnum">2023</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-coverage"><label for="p-coverage"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Makes coverage itself a differentiable training objective instead of a post-hoc diagnostic — bakes calibration into training rather than checking for it afterward.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Robust Amortized Bayesian Inference with Self-Consistency Losses on Unlabeled Data Mishra Habermann Schmitt Radev Burkner 2026 ICLR">
-            <div class="card-top"><div class="card-heading"><h4>Robust ABI with Self-Consistency Losses</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/selfconsistency.html">Robust ABI with Self-Consistency Losses</a></h4>
               <div class="meta"><span>Mishra, Habermann, Schmitt, Radev, Bürkner</span><span>·</span><span class="tnum">2026</span><span>·</span><span>ICLR</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-selfconsistency"><label for="p-selfconsistency"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -591,21 +494,21 @@
         <p class="module-why">Promising, not proven — the causal extension of the PFN recipe has synthetic and semi-synthetic evidence, real-benchmark evidence in one case, and no real-world marketing validation yet.</p>
         <div class="cards">
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Do-PFN In-Context Learning for Causal Effect Estimation Robertson Reuter Guo Hollmann Hutter Scholkopf 2025 NeurIPS">
-            <div class="card-top"><div class="card-heading"><h4>Do-PFN</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/dopfn.html">Do-PFN</a></h4>
               <div class="meta"><span>Robertson, Reuter, Guo, Hollmann, Hutter, Schölkopf</span><span>·</span><span class="tnum">2025</span><span>·</span><span>NeurIPS</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-dopfn"><label for="p-dopfn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Trains a transformer on millions of synthetic Structural Causal Models so it can predict conditional interventional distributions p(y | do(t), x) zero-shot, without the causal graph at inference time. Correctly performs back-door/front-door-style adjustment implicitly. Synthetic/semi-synthetic evidence only so far.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="CausalPFN Amortized Causal Effect Estimation via In-Context Learning Balazadeh Kamkari Thomas 2025">
-            <div class="card-top"><div class="card-heading"><h4>CausalPFN</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/causalpfn.html">CausalPFN</a></h4>
               <div class="meta"><span>Balazadeh, Kamkari, Thomas, et al.</span><span>·</span><span class="tnum">2025</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-causalpfn"><label for="p-causalpfn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Same PFN-for-causality idea as Do-PFN, but targets the expectation (CEPO) and enforces identifiability in the training prior. Tested on real causal benchmarks (IHDP, LaLonde, ACIC) plus real uplift tasks — more real-data validation than Do-PFN.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Interventional Time Series Priors for Causal Foundation Models Thumm Chen ICLR 2026 Workshop">
-            <div class="card-top"><div class="card-heading"><h4>Interventional Time Series Priors</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/tsprior.html">Interventional Time Series Priors</a></h4>
               <div class="meta"><span>Thumm, Chen</span><span>·</span><span class="tnum">2026</span><span>·</span><span>ICLR Workshop</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-tsprior"><label for="p-tsprior"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -619,21 +522,21 @@
         <p class="module-why">Where the recipe hasn't landed yet. The incumbent, the one neural foil, and the nearest amortized-inference relative — none of them are the thing this library is arguing for.</p>
         <div class="cards">
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Bayesian Methods for Media Mix Modeling with Carryover and Shape Effects Jin Wang Sun Chan Koehler Google 2017">
-            <div class="card-top"><div class="card-heading"><h4>Bayesian MMM with Carryover &amp; Shape Effects</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/jinmmm.html">Bayesian MMM with Carryover &amp; Shape Effects</a></h4>
               <div class="meta"><span>Jin, Wang, Sun, Chan, Koehler — Google</span><span>·</span><span class="tnum">2017</span><span class="tag">incumbent</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-jinmmm"><label for="p-jinmmm"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">The incumbent standard for MMM: hierarchical Bayesian regression with adstock (carryover) and Hill-function saturation, fit via MCMC, one brand at a time. Read as the baseline to benchmark against, not a method to imitate mechanically — this is the thing amortized inference would replace.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="NNN Next-Generation Neural Networks for Marketing Measurement Mulc Anderson Cubre Zhang Liu Kumar Google 2025">
-            <div class="card-top"><div class="card-heading"><h4>NNN: Neural Networks for Marketing Measurement</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/nnn.html">NNN: Neural Networks for Marketing Measurement</a></h4>
               <div class="meta"><span>Mulc, Anderson, Cubre, Zhang, Liu, Kumar — Google</span><span>·</span><span class="tnum">2025</span><span class="tag">the foil</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-nnn"><label for="p-nnn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">The one existing neural alternative to classic MMM — and it goes the opposite direction from amortized inference: a Transformer trained on a brand's own data that abandons explicit priors and parametric adstock/saturation, trading uncertainty quantification for flexibility. The counterpoint for explaining why amortized SBI (priors kept, just moved into a simulator) is a different bet.</p>
           </div>
           <div class="card pillar-sbi" data-card data-pillar="sbi" data-title="Amortized Inference for Correlated Discrete Choice Models via Equivariant Neural Networks Huch Keane 2026">
-            <div class="card-top"><div class="card-heading"><h4>Amortized Inference for Discrete Choice Models</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/discretechoice.html">Amortized Inference for Discrete Choice Models</a></h4>
               <div class="meta"><span>Huch, Keane</span><span>·</span><span class="tnum">2026</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-discretechoice"><label for="p-discretechoice"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -661,35 +564,35 @@
         <p class="module-why">Solid, classic, in rough order of how directly each builds on the last. No hands-on repo here yet — pull BoTorch/Ax docs when building exercises.</p>
         <div class="cards">
           <div class="card pillar-bo" data-card data-pillar="bo" data-title="Efficient Global Optimization of Expensive Black-Box Functions Jones Schonlau Welch 1998 EGO">
-            <div class="card-top"><div class="card-heading"><h4>Efficient Global Optimization (EGO)</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/ego.html">Efficient Global Optimization (EGO)</a></h4>
               <div class="meta"><span>Jones, Schonlau, Welch</span><span>·</span><span class="tnum">1998</span><span class="tag">founding paper</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-ego"><label for="p-ego"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Introduces Expected Improvement and Kriging (GP) surrogates for optimizing expensive black-box functions. Everything downstream in BO traces back here.</p>
           </div>
           <div class="card pillar-bo" data-card data-pillar="bo" data-title="Practical Bayesian Optimization of Machine Learning Algorithms Snoek Larochelle Adams 2012 Spearmint">
-            <div class="card-top"><div class="card-heading"><h4>Practical Bayesian Optimization ("Spearmint")</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/spearmint.html">Practical Bayesian Optimization ("Spearmint")</a></h4>
               <div class="meta"><span>Snoek, Larochelle, Adams</span><span>·</span><span class="tnum">2012</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-spearmint"><label for="p-spearmint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Made BO practical for ML hyperparameter tuning: noisy observations, parallel/async evaluation, GP hyperparameters integrated out rather than point-estimated. Took BO from theory to a tool practitioners actually used.</p>
           </div>
           <div class="card pillar-bo core" data-card data-pillar="bo" data-title="A Tutorial on Bayesian Optimization Frazier 2018">
-            <div class="card-top"><div class="card-heading"><h4>A Tutorial on Bayesian Optimization</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/frazier.html">A Tutorial on Bayesian Optimization</a></h4>
               <div class="meta"><span>Frazier</span><span>·</span><span class="tnum">2018</span><span class="tag">best on-ramp</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-frazier"><label for="p-frazier"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">The best on-ramp: clean derivation of GP surrogates, Expected Improvement, knowledge gradient, and when BO is (and isn't) the right tool.</p>
           </div>
           <div class="card pillar-bo" data-card data-pillar="bo" data-title="Taking the Human Out of the Loop A Review of Bayesian Optimization Shahriari Swersky Wang Adams de Freitas 2016 Proc IEEE">
-            <div class="card-top"><div class="card-heading"><h4>Taking the Human Out of the Loop</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/shahriari.html">Taking the Human Out of the Loop</a></h4>
               <div class="meta"><span>Shahriari, Swersky, Wang, Adams, de Freitas</span><span>·</span><span class="tnum">2016</span><span>·</span><span>Proc. IEEE</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-shahriari"><label for="p-shahriari"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Broader survey than Frazier — alternative acquisition functions, non-GP surrogates, constrained/multi-fidelity/parallel BO, and applications.</p>
           </div>
           <div class="card pillar-bo" data-card data-pillar="bo" data-title="Bayesian Optimization Garnett textbook 2023">
-            <div class="card-top"><div class="card-heading"><h4>Bayesian Optimization</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/garnett.html">Bayesian Optimization</a></h4>
               <div class="meta"><span>Garnett</span><span>·</span><span class="tnum">2023</span><span>·</span><span>textbook</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-garnett"><label for="p-garnett"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -703,14 +606,14 @@
         <p class="module-why">Intervene on <em>any</em> node of a known causal graph, not just the target variable directly — the classic-BO analog to "which marketing lever, given last quarter's causal effects, in a market that keeps shifting."</p>
         <div class="cards">
           <div class="card pillar-bo" data-card data-pillar="bo" data-title="Causal Bayesian Optimization Aglietti Lu Paleyes Gonzalez AISTATS 2020">
-            <div class="card-top"><div class="card-heading"><h4>Causal Bayesian Optimization</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/cbo.html">Causal Bayesian Optimization</a></h4>
               <div class="meta"><span>Aglietti, Lu, Paleyes, González</span><span>·</span><span class="tnum">2020</span><span>·</span><span>AISTATS</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-cbo"><label for="p-cbo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Introduces CBO: intervene on any node in a known causal graph via do-calculus, not just the target directly. Sample-efficiency comes from graph structure — upstream interventions can be informative even when a downstream target is what's optimized.</p>
           </div>
           <div class="card pillar-bo" data-card data-pillar="bo" data-title="Dynamic Causal Bayesian Optimization Aglietti Dhir Gonzalez Damoulas NeurIPS 2021">
-            <div class="card-top"><div class="card-heading"><h4>Dynamic Causal Bayesian Optimization</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/dcbo.html">Dynamic Causal Bayesian Optimization</a></h4>
               <div class="meta"><span>Aglietti, Dhir, González, Damoulas</span><span>·</span><span class="tnum">2021</span><span>·</span><span>NeurIPS</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-dcbo"><label for="p-dcbo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -725,35 +628,35 @@
         <div class="order-note">Reading order: 1 OPRO (no surrogate) → 2 LLAMBO (LLM assists a real surrogate) → 3 LABO (two-phase discipline) → 4 "Are We There Yet?" (skeptical audit) → 5 Agentic BO / Sara-lenz (fullest synthesis).</div>
         <div class="cards">
           <div class="card pillar-bo" data-card data-pillar="bo" data-title="OPRO Large Language Models as Optimizers Yang Wang Lu Liu Le Zhou Chen Google DeepMind 2023">
-            <div class="card-top"><div class="card-heading"><span class="card-order">1</span><h4>OPRO: Large Language Models as Optimizers</h4>
+            <div class="card-top"><div class="card-heading"><span class="card-order">1</span><h4><a href="papers/opro.html">OPRO: Large Language Models as Optimizers</a></h4>
               <div class="meta"><span>Yang, Wang, Lu, Liu, Le, Zhou, Chen — Google DeepMind</span><span>·</span><span class="tnum">2023</span><span class="tag">baseline</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-opro"><label for="p-opro"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">The foundational "LLM-as-optimizer" paper: put the trajectory of past (solution, score) pairs in a prompt, have the LLM propose the next one directly — no explicit surrogate at all. The minimal baseline every other paper here extends or argues against.</p>
           </div>
           <div class="card pillar-bo" data-card data-pillar="bo" data-title="LLAMBO Large Language Models to Enhance Bayesian Optimization Liu Astorga Seedat van der Schaar ICLR 2024">
-            <div class="card-top"><div class="card-heading"><span class="card-order">2</span><h4>LLAMBO</h4>
+            <div class="card-top"><div class="card-heading"><span class="card-order">2</span><h4><a href="papers/llambo.html">LLAMBO</a></h4>
               <div class="meta"><span>Liu, Astorga, Seedat, van der Schaar</span><span>·</span><span class="tnum">2024</span><span>·</span><span>ICLR</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-llambo"><label for="p-llambo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">A disciplined middle ground: keeps the real surrogate + acquisition structure, lets the LLM contribute at specific points — zero-shot warmstarting, candidate proposals, domain-context enrichment. This is the baseline the Agentic BO paper benchmarks against.</p>
           </div>
           <div class="card pillar-bo" data-card data-pillar="bo" data-title="LABO LLM-Accelerated Bayesian Optimization through Broad Exploration and Selective Experimentation Chen Yuan Zhang 2026">
-            <div class="card-top"><div class="card-heading"><span class="card-order">3</span><h4>LABO</h4>
+            <div class="card-top"><div class="card-heading"><span class="card-order">3</span><h4><a href="papers/labo.html">LABO</a></h4>
               <div class="meta"><span>Chen, Yuan, Zhang, et al.</span><span>·</span><span class="tnum">2026</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-labo"><label for="p-labo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Splits the LLM's role into two explicit phases — broad exploration, then selective, statistically-grounded experimentation — to avoid the overconfident, memorization-prone proposals of letting an LLM freely drive the whole loop.</p>
           </div>
           <div class="card pillar-bo" data-card data-pillar="bo" data-title="LLMs for Bayesian Optimization in Scientific Domains Are We There Yet Gupta Hartford Liu 2025">
-            <div class="card-top"><div class="card-heading"><span class="card-order">4</span><h4>LLMs for BO in Scientific Domains: Are We There Yet?</h4>
+            <div class="card-top"><div class="card-heading"><span class="card-order">4</span><h4><a href="papers/arewethere.html">LLMs for BO in Scientific Domains: Are We There Yet?</a></h4>
               <div class="meta"><span>Gupta, Hartford, Liu</span><span>·</span><span class="tnum">2025</span><span class="tag">skeptical</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-arewethere"><label for="p-arewethere"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">A critical evaluation of LLM-driven BO in scientific settings — tests whether LLM surrogates/proposers actually help over classic GP-based BO, and where they fall short: calibration, exploration discipline, benchmark memorization.</p>
           </div>
           <div class="card pillar-bo core" data-card data-pillar="bo" data-title="Agentic Bayesian Optimization through Surrogate-Augmented Autoresearch Brunzema Tiao Le De Angeli Xuan Gligorijevic Meta 2026 Sara lenz">
-            <div class="card-top"><div class="card-heading"><span class="card-order">5</span><h4>Agentic BO: Sara / lenz</h4>
+            <div class="card-top"><div class="card-heading"><span class="card-order">5</span><h4><a href="papers/sara.html">Agentic BO: Sara / lenz</a></h4>
               <div class="meta"><span>Brunzema, Tiao, Le, De Angeli, Xuan, Gligorijevic — Meta</span><span>·</span><span class="tnum">2026</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-sara"><label for="p-sara"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -777,56 +680,56 @@
         <div class="order-note">Read the survey first and the critique last — everything in between is easier to evaluate once you've seen both the frame and the rebuttal.</div>
         <div class="cards">
           <div class="card pillar-agentic core" data-card data-pillar="agentic" data-title="From AI for Science to Agentic Science A Survey on Autonomous Scientific Discovery Wei Yang Zhang Chen Zhuang 2025">
-            <div class="card-top"><div class="card-heading"><span class="card-order">1</span><h4>From AI for Science to Agentic Science</h4>
+            <div class="card-top"><div class="card-heading"><span class="card-order">1</span><h4><a href="papers/agenticsurvey.html">From AI for Science to Agentic Science</a></h4>
               <div class="meta"><span>Wei, Yang, Zhang, Chen, Zhuang, et al.</span><span>·</span><span class="tnum">2025</span><span class="tag">read first</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-agenticsurvey"><label for="p-agenticsurvey"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">The orientation piece for this module — unifies process-, autonomy-, and mechanism-oriented views of "agentic science," surveying realizations across life sciences, chemistry, materials, physics.</p>
           </div>
           <div class="card pillar-agentic" data-card data-pillar="agentic" data-title="AI Co-Scientist Gottweis Weng Daryin Tu Google DeepMind 2025 Nature 2026">
-            <div class="card-top"><div class="card-heading"><h4>AI Co-Scientist</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/coscientist.html">AI Co-Scientist</a></h4>
               <div class="meta"><span>Gottweis, Weng, Daryin, Tu, et al. — Google DeepMind</span><span>·</span><span class="tnum">2025</span><span>·</span><span>Nature 2026</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-coscientist"><label for="p-coscientist"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Multi-agent system on Gemini that generates, critiques, ranks, and evolves hypotheses through a tournament-style "generate, debate, evolve" loop, grounded in literature retrieval and external tools. The most institutionally-backed exemplar of the pattern.</p>
           </div>
           <div class="card pillar-agentic" data-card data-pillar="agentic" data-title="Robin A multi-agent system for automating scientific discovery Ghareeb Chang Mitchener Yiu FutureHouse 2025 Nature 2026">
-            <div class="card-top"><div class="card-heading"><h4>Robin</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/robin.html">Robin</a></h4>
               <div class="meta"><span>Ghareeb, Chang, Mitchener, Yiu, et al. — FutureHouse</span><span>·</span><span class="tnum">2025</span><span>·</span><span>Nature 2026</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-robin"><label for="p-robin"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Biology-domain agent team — literature agents "Crow"/"Falcon" plus data-analysis agent "Finch" — running an iterative lab-in-the-loop cycle to a real repurposed drug candidate for a retinal disease. Agentic discovery, outside chemistry/materials.</p>
           </div>
           <div class="card pillar-agentic" data-card data-pillar="agentic" data-title="The AI Scientist Towards Fully Automated Open-Ended Scientific Discovery Sakana AI 2024">
-            <div class="card-top"><div class="card-heading"><h4>The AI Scientist</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/aiscientist1.html">The AI Scientist</a></h4>
               <div class="meta"><span>Sakana AI</span><span>·</span><span class="tnum">2024</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-aiscientist1"><label for="p-aiscientist1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">End-to-end automation of ML research itself — idea generation, coding, experiments, plotting, full paper write-up, simulated peer review. Closes the loop on the entire research lifecycle, not one step of it.</p>
           </div>
           <div class="card pillar-agentic" data-card data-pillar="agentic" data-title="The AI Scientist-v2 Workshop-Level Automated Scientific Discovery via Agentic Tree Search Sakana AI 2025">
-            <div class="card-top"><div class="card-heading"><h4>The AI Scientist-v2</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/aiscientist2.html">The AI Scientist-v2</a></h4>
               <div class="meta"><span>Sakana AI</span><span>·</span><span class="tnum">2025</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-aiscientist2"><label for="p-aiscientist2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Drops v1's human-authored code templates, generalizes across ML subfields via progressive agentic tree search, produced the first fully AI-generated paper to pass a real workshop peer-review bar.</p>
           </div>
           <div class="card pillar-agentic" data-card data-pillar="agentic" data-title="Agent Laboratory Using LLM Agents as Research Assistants Schmidgall 2025">
-            <div class="card-top"><div class="card-heading"><h4>Agent Laboratory</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/agentlab.html">Agent Laboratory</a></h4>
               <div class="meta"><span>Schmidgall, et al.</span><span>·</span><span class="tnum">2025</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-agentlab"><label for="p-agentlab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Role-based agent team (PhD / Postdoc / ML-Engineer / Professor) running literature review → experimentation → report writing, with an explicit human-checkpoint "co-pilot" mode. Reports an 84% cost reduction versus prior autonomous-research baselines.</p>
           </div>
           <div class="card pillar-agentic" data-card data-pillar="agentic" data-title="AgentRxiv Towards Collaborative Autonomous Research Schmidgall 2025">
-            <div class="card-top"><div class="card-heading"><h4>AgentRxiv</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/agentrxiv.html">AgentRxiv</a></h4>
               <div class="meta"><span>Schmidgall, et al.</span><span>·</span><span class="tnum">2025</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-agentrxiv"><label for="p-agentrxiv"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Extends Agent Laboratory into a shared preprint server <em>for agents</em> — one lab's findings become immediately available as context to other autonomous labs. Tests whether agent research systems compound the way human science does via citation.</p>
           </div>
           <div class="card pillar-agentic core" data-card data-pillar="agentic" data-title="Agentic AI Scientists Are Not Built For Autonomous Scientific Discovery Bisht Kumar Jablonka Mausam Krishnan 2026">
-            <div class="card-top"><div class="card-heading"><span class="card-order">8</span><h4>Agentic AI Scientists Are Not Built For Autonomous Discovery</h4>
+            <div class="card-top"><div class="card-heading"><span class="card-order">8</span><h4><a href="papers/critique.html">Agentic AI Scientists Are Not Built For Autonomous Discovery</a></h4>
               <div class="meta"><span>Bisht, Kumar, Jablonka, Mausam, Krishnan</span><span>·</span><span class="tnum">2026</span><span class="tag">read last</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-critique"><label for="p-critique"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -840,28 +743,28 @@
         <p class="module-why">Structurally distinct from both BO and free-form co-scientist teams: an LLM as the mutation/crossover operator over a population of candidate programs, scored by a hard evaluator. No posterior, no calibrated belief about where the optimum is — just selection pressure. Good material to contrast directly against Part II: same propose → evaluate → update skeleton, very different epistemics.</p>
         <div class="cards">
           <div class="card pillar-agentic core" data-card data-pillar="agentic" data-title="FunSearch Mathematical discoveries from program search with large language models Romera-Paredes Barekatain Novikov Google DeepMind Nature 2023">
-            <div class="card-top"><div class="card-heading"><h4>FunSearch</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/funsearch.html">FunSearch</a></h4>
               <div class="meta"><span>Romera-Paredes, Barekatain, Novikov, et al. — Google DeepMind</span><span>·</span><span class="tnum">2023</span><span>·</span><span>Nature</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-funsearch"><label for="p-funsearch"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Pairs a pretrained LLM with a systematic evaluator in an evolutionary loop: the LLM sees its best programs so far and proposes an improved one, the evaluator scores it, survivors carry into the next generation's context. Found genuinely new constructions for the cap set problem and better bin-packing heuristics — real open-problem progress, not benchmark-matching.</p>
           </div>
           <div class="card pillar-agentic" data-card data-pillar="agentic" data-title="AlphaEvolve A coding agent for scientific and algorithmic discovery Novikov Vu Eisenberger Google DeepMind 2025">
-            <div class="card-top"><div class="card-heading"><h4>AlphaEvolve</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/alphaevolve.html">AlphaEvolve</a></h4>
               <div class="meta"><span>Novikov, Vũ, Eisenberger, et al. — Google DeepMind</span><span>·</span><span class="tnum">2025</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-alphaevolve"><label for="p-alphaevolve"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">FunSearch's generalization from single functions to entire codebases — improved matrix-multiplication algorithms, data-center job scheduling, alongside open math problems. The clearest evidence the pattern scales past toy problems into production systems.</p>
           </div>
           <div class="card pillar-agentic" data-card data-pillar="agentic" data-title="Barbarians at the Gate How AI is Upending Systems Research ADRS UC Berkeley Cheng Liu Pan Zaharia Stoica 2025">
-            <div class="card-top"><div class="card-heading"><h4>Barbarians at the Gate (ADRS)</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/adrs.html">Barbarians at the Gate (ADRS)</a></h4>
               <div class="meta"><span>Cheng, Liu, Pan, Li, Wang, et al. — UC Berkeley</span><span>·</span><span class="tnum">2025</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-adrs"><label for="p-adrs"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
             <p class="summary">Introduces ADRS — the same generate/evaluate/refine loop applied to computer-systems algorithm design: cloud scheduling, MoE load balancing, transaction scheduling. Across ten case studies, ADRS-generated solutions matched or beat human state-of-the-art, up to 5.0× faster or 26% cheaper. The systems-research analog of FunSearch/AlphaEvolve's math focus.</p>
           </div>
           <div class="card pillar-agentic" data-card data-pillar="agentic" data-title="AlphaLab Autonomous Multi-Agent Research Across Optimization Domains with Frontier LLMs Hogan Chen Wilson Rasul Morgan Stanley 2026">
-            <div class="card-top"><div class="card-heading"><h4>AlphaLab</h4>
+            <div class="card-top"><div class="card-heading"><h4><a href="papers/alphalab.html">AlphaLab</a></h4>
               <div class="meta"><span>Hogan, Chen, Wilson, Rasul, et al. — Morgan Stanley</span><span>·</span><span class="tnum">2026</span></div></div>
               <div class="read-toggle"><input type="checkbox" id="p-alphalab"><label for="p-alphalab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg></label></div>
             </div>
@@ -915,36 +818,12 @@
   </main>
 </div>
 
+<script src="assets/theme.js"></script>
 <script>
 (function () {
   "use strict";
 
   var STORAGE_KEY = "sbi-study-plan-progress-v1";
-  var THEME_KEY = "sbi-study-plan-theme";
-
-  /* ---- theme toggle ---- */
-  var root = document.documentElement;
-  var toggle = document.getElementById("themeToggle");
-  var iconSun = document.getElementById("iconSun");
-  var iconMoon = document.getElementById("iconMoon");
-
-  function applyTheme(t) {
-    if (t === "dark" || t === "light") { root.setAttribute("data-theme", t); }
-    else { root.removeAttribute("data-theme"); }
-    var isDark = t === "dark" || (t !== "light" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    iconSun.style.display = isDark ? "none" : "block";
-    iconMoon.style.display = isDark ? "block" : "none";
-  }
-  var savedTheme = null;
-  try { savedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
-  applyTheme(savedTheme);
-  toggle.addEventListener("click", function () {
-    var current = root.getAttribute("data-theme");
-    var isDark = current === "dark" || (!current && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    var next = isDark ? "light" : "dark";
-    applyTheme(next);
-    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
-  });
 
   /* ---- progress tracking ---- */
   var checkboxes = Array.prototype.slice.call(document.querySelectorAll('.read-toggle input[type="checkbox"]'));
