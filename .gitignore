@@ -2,9 +2,12 @@
 # See AGENTS.md "Git & GitHub conventions" for how to reconstitute the library.
 *.pdf
 
-# Cloned reference repos — other people's code, easily re-cloned.
-# See PAPERS_SUMMARY.md "Code repositories" for URLs.
-/repos/
+# Cloned reference repos — keep only each repo's README.md as a pointer;
+# the actual code is other people's, easily re-cloned from the URLs in
+# PAPERS_SUMMARY.md "Code repositories". If a full clone ever lands back
+# in repos/<name>/, only its README.md gets committed.
+repos/*/*
+!repos/*/README.md
 
 # Original scoping conversation — kept local-only (references business context
 # in the abstract; not for the public repo).
