@@ -1,0 +1,14 @@
+# Reference PDFs — large, and not all are under redistribution-permissive licenses.
+# See AGENTS.md "Git & GitHub conventions" for how to reconstitute the library.
+*.pdf
+
+# Cloned reference repos — other people's code, easily re-cloned.
+# See PAPERS_SUMMARY.md "Code repositories" for URLs.
+/repos/
+
+# Original scoping conversation — kept local-only (references business context
+# in the abstract; not for the public repo).
+research.md
+
+# macOS
+.DS_Store
