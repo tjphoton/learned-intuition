@@ -42,14 +42,61 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>What's new versus tcdbi (the origin PFN paper) — the sequence relationship</h3>
+    <p>TabPFN takes the general PFN recipe from <a href="tcdbi.html">Müller et al.'s "Transformers Can Do Bayesian Inference"</a> and specializes/scales it in five concrete ways:</p>
+    <ul>
+      <li><strong>A tabular-specific architecture</strong>: two-way attention where every cell attends both across features within its row (its sample) <em>and</em> across samples for the same feature (Fig. 1b) — a genuine extension of tcdbi's sample-only permutation-invariant attention to invariance over <em>both</em> samples and features.</li>
+      <li><strong>A far richer synthetic prior</strong>: full structural causal models (SCMs) with sampled DAG structure, mixed computational edge types (small neural nets, decision trees, discretization), and explicit post-processing for missing values, outliers, and categorical features — engineered specifically to cover real tabular-data pathologies, versus tcdbi's simpler GP/BNN/hand-drawn-line priors.</li>
+      <li><strong>Two orders of magnitude more scale</strong>: ~100–130 million synthetic training datasets (vs. tcdbi's up to 4 million), datasets up to 10,000 samples and 500 features (vs. ~2,000 examples).</li>
+      <li><strong>New systems engineering</strong> — train/test state caching, half-precision layer norms, flash attention, activation checkpointing — needed only because the scale-up made naive computation infeasible; not present in tcdbi.</li>
+      <li><strong>New foundation-model capabilities</strong> tcdbi never explored: density estimation, synthetic data generation, reusable embeddings, fine-tuning, SHAP interpretability comparisons.</li>
+    </ul>
+    <p>The theoretical foundation is directly inherited, not reinvented: the paper states explicitly that TabPFN "can be viewed as approximating Bayesian prediction for a prior defined by the synthetic datasets," per tcdbi's own theory — and it reuses tcdbi's piece-wise-constant (Riemann) output distribution for regression targets.</p>
+
+    <h3>The headline numbers</h3>
+    <p>In 2.8 seconds (classification) or 4.8 seconds (regression) average per dataset, default TabPFN outperforms tuned baselines (XGBoost, CatBoost, LightGBM, random forest) given up to 4 hours of hyperparameter search — a <strong>5,140× speedup for classification and 3,000× for regression</strong> to reach equivalent performance. Against CatBoost specifically (the strongest default baseline): +0.187 normalized ROC AUC untuned, +0.13 tuned; +0.051 normalized RMSE untuned, +0.093 tuned. Against AutoGluon 1.0 (a tuned stacked ensemble) given up to 4 hours: TabPFN(PHE) — TabPFN combined with post-hoc ensembling — reaches 0.971 normalized ROC AUC vs. AutoGluon's 0.914, a 48× speedup on regression specifically.</p>
+    <p>One number worth holding onto for calibration of the other claims: for a single prediction on a 10,000-row, 10-feature dataset, TabPFN itself takes <strong>0.2 seconds</strong> — CatBoost (default, already fitted) does the same in <strong>0.0002 seconds</strong>. The giant speedup numbers above are about avoiding CatBoost's hours of <em>hyperparameter search</em>, not raw per-prediction latency — TabPFN is not universally faster at inference than an already-tuned tree model.</p>
+
+    <h3>The synthetic-data engine: structural causal models</h3>
+    <p>Each synthetic dataset is generated from a sampled directed acyclic graph (a structural causal model): initialization noise is propagated from root nodes through the graph, and each edge applies one of several computational mappings — small randomly-initialized neural networks with varied nonlinear activations, decision trees with randomly sampled splits, or categorical discretization — with Gaussian noise injected at every edge. Post-processing then adds Kumaraswamy-distribution warping, quantization into randomly-sized buckets (mimicking real binned/discretized features), and missing-value injection. Disjoint subgraphs are allowed specifically so some features end up marginally independent of the target — modeling the realistic case of uninformative predictors. This is a deliberately engineered, not incidental, description of what real-world tabular data pathologically looks like.</p>
+
+    <h3>Explicit, stated limitations (from the paper's own Methods section)</h3>
+    <ul>
+      <li>Inference speed can be <em>slower</em> than highly optimized methods like CatBoost (see the 0.2s vs. 0.0002s number above).</li>
+      <li>Memory usage scales linearly with dataset size — prohibitive for very large datasets.</li>
+      <li>Evaluation is scoped to ≤10,000 samples and ≤500 features; scaling beyond that "requires further study."</li>
+    </ul>
+    <p>These are the exact three limitations <a href="tabpfn25.html">TabPFN-2.5</a> and <a href="tabpfn3.html">TabPFN-3</a> (next in this reading order) go on to directly address.</p>
+
+    <h3>Foundation-model abilities beyond prediction</h3>
+    <p>Because the architecture is a generative transformer, not just a classifier, the same trained network supports: <strong>density estimation</strong> (factorize the joint distribution over features and label autoregressively, Eq. 4–5, enabling anomaly detection); <strong>synthetic data generation</strong> (sample new rows feature-by-feature from that same factorization); <strong>reusable embeddings</strong> (the learned per-feature representations transfer to downstream tasks — shown improving class separation on a handwriting-recognition dataset via PCA); and <strong>fine-tuning</strong> on related datasets (demonstrated on shifted sine-curve tasks, showing positive transfer that degrades gracefully as the shift increases). None of this is available from a tree ensemble.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Builds directly on <a href="tcdbi.html">tcdbi.html</a>'s "fake datasets, fill in the blank, millions of times" training story — here that exact recipe gets pointed specifically at spreadsheets (rows and columns of real-world data), with a purpose-built engine for generating fake spreadsheets that behave like real ones.</p>
+
+    <h4>1. Why spreadsheets were the holdout</h4>
+    <p>Images and text both got their "learn it, don't hand-design it" moment years ago — hand-built edge-detectors in vision got replaced by learned convolutions, hand-built grammar rules in language got replaced by learned transformers. Spreadsheets never got that moment. Gradient-boosted decision trees (XGBoost, CatBoost) have quietly won on tabular data for twenty straight years, resisting every attempt to beat them with a neural network. This paper is the first to genuinely dislodge them, on the exact size of dataset (small-to-medium, up to 10,000 rows) where trees were considered unbeatable.</p>
+
+    <h4>2. What makes a "fake spreadsheet" realistic enough to matter</h4>
+    <p>The training recipe needs millions of fake tables that behave like real ones — real messiness included: some columns matter, some are noise; some rows are outliers; some cells are missing; some columns are categories, not numbers. The paper's answer: build a small random causal diagram (which column influences which), let noise flow through it via random little formulas — small neural networks, decision-tree-style rules, simple math — then deliberately rough it up afterward: warp some numbers, chop some into buckets, and randomly blank out some cells as "missing." Do this a hundred million times, each time a different diagram, and you've shown the network nearly every kind of "shape" a real spreadsheet's problems can take, long before it ever sees a real one.</p>
+
+    <h4>3. A stopwatch comparison that's almost unfair, in the network's favor</h4>
+    <p>Picture two contestants solving the same puzzle. XGBoost gets 4 hours to try every reasonable setting of its own dials before answering — that's how it's normally used in practice. TabPFN gets 2.8 seconds, no dial-turning at all, and still wins on average. The "5,140× speedup" figure isn't measuring raw thinking speed — it's measuring how long the slower method needs to spend <em>tuning itself</em> before it catches up. Worth remembering, though, so the headline number doesn't get overclaimed: for a single already-tuned prediction, the tree model is still faster in absolute terms (0.0002 seconds vs. TabPFN's 0.2). The real win is skipping the tuning phase entirely, not raw speed at the moment of prediction.</p>
+
+    <h4>4. Getting uncertainty "for free," illustrated with light through two slits</h4>
+    <p>Most prediction methods give you one number and stop. TabPFN gives you a full shape of belief, including strange shapes — the paper demonstrates this on a physics classic: shine light through two narrow slits, and the light intensity hitting a screen forms a rippled, multi-peaked pattern (the double-slit interference pattern, evidence that light behaves like a wave). TabPFN predicts that entire rippled shape correctly in a single 1.2-second pass. The tree-based baseline can't do this directly — it has to be run many separate times at different confidence levels and stitched back together into an approximate shape, and even after being specifically tuned for over two and a half minutes, it still produces a visibly worse reconstruction.</p>
+
+    <h4>5. The same trained network can do more than predict</h4>
+    <p>Because the underlying model is a generative transformer rather than a decision-rule engine, the same trained TabPFN can also: guess how "normal" or "surprising" a given row is (useful for catching fraud or equipment failures); invent entirely new fake rows that resemble a real dataset's statistical patterns (useful when you can't share the real, sensitive data but need something realistic to test with); and be fine-tuned further on a specific related dataset, the way a language model gets fine-tuned on a specific writing style. None of that is available from a tree ensemble, which really can only ever do the one thing it was built to do: predict a label.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>Worth tracking forward: this paper's own Methods section is unusually candid about scope — it explicitly limits its claims to ≤10,000 samples and ≤500 features, flags that memory scales linearly (a real ceiling for big datasets), and admits inference can be slower than CatBoost per single prediction. <a href="tabpfn25.html">TabPFN-2.5</a> and <a href="tabpfn3.html">TabPFN-3</a>, next in this reading order, are best read as direct responses to exactly these three stated limits — worth checking, when we get there, whether each one names which specific limitation it's attacking.</p>
+    <p>Also worth noting: the paper's "TabPFN achieves high accuracy while learning simple, interpretable feature relationships" claim (via SHAP comparison against logistic regression and CatBoost) is the paper's own framing, not an independently audited claim — a reasonable thing to hold a little skeptically until seen firsthand, per this project's general practice of not taking a single paper's self-assessment as the final word on its own strengths.</p>
     <!-- DISCUSSION:END -->
   </section>
 
