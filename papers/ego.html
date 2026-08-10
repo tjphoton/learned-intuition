@@ -42,14 +42,52 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>The founding contribution is a complete workflow, not just Expected Improvement</h3>
+    <p>Jones, Schonlau, and Welch start from a concrete constraint: one evaluation of an engineering simulator may take hours, so the scarce resource is the number of objective-function calls. Their Efficient Global Optimization (EGO) workflow combines a space-filling initial design, a stochastic-process response surface, cross-validation diagnostics, Expected Improvement (EI), and a stopping rule. EI existed before this paper, as the authors note, but EGO made the pieces into the practical template that later Bayesian optimization work inherited.</p>
+
+    <h3>The surrogate is an interpolating stochastic process</h3>
+    <p>The paper calls the model DACE, or Design and Analysis of Computer Experiments. In current language it is a Gaussian process surrogate. The objective is modeled as a constant mean plus a correlated random process. Its correlation function gives nearby inputs similar values, with one fitted length-scale-like parameter per coordinate. Because the simulator is assumed deterministic, the predictor passes through every observed value and its predictive standard error falls to zero at sampled points. Maximum likelihood estimates the process parameters.</p>
+
+    <h3>Model validation comes before optimization</h3>
+    <p>A detail often lost in short histories of BO is how strongly this paper insists on checking the surrogate. The authors use leave-one-out predictions, standardized residuals, and plots of actual against predicted values. A model that fails these checks should not guide the search. For the Goldstein-Price and Hartman 6 tests, diagnostics lead them to transform the objective before continuing. This is an early statement of a rule that matters throughout this library: uncertainty from a fitted model is useful only when the model's assumptions are credible.</p>
+
+    <h3>Expected Improvement balances two reasons to sample</h3>
+    <p>For minimization, improvement at a candidate point is <em>I(x) = max(f<sub>min</sub> - Y(x), 0)</em>, where the surrogate treats the unknown value <em>Y(x)</em> as normally distributed. EI is its expectation. The closed-form expression has two parts: one rewards a low predicted value, and the other rewards high predictive uncertainty. It can therefore sample near the current best point or far into an uncertain region. The paper shows why simply minimizing the surrogate gets trapped at a local minimum and why maximizing uncertainty alone wastes evaluations.</p>
+
+    <h3>EGO also tries to solve the acquisition problem exactly</h3>
+    <p>EI is itself highly multimodal and equals zero at every sampled point. The authors use branch and bound to maximize it, deriving box-wise bounds from a lower bound on the predictor and an upper bound on its standard error. This exact inner optimization is a major part of the paper, even though later BO systems usually use cheaper multistart or approximate acquisition optimizers. EGO stops when the maximum EI is less than 1% of the best observed value, then warns that this one-step quantity can understate the value of continued search.</p>
+
+    <h3>The benchmark shows both efficiency and an imperfect stopping rule</h3>
+    <p>On Branin, Goldstein-Price, Hartman 3, and Hartman 6, EGO reaches its stopping condition after 28, 32, 34, and 84 evaluations. The actual errors at those points are 0.2%, 0.1%, 1.7%, and 1.9%. Hartman 3 needs 35 evaluations and Hartman 6 needs 121 to reach actual 1% accuracy. The authors explain the mismatch: estimated GP parameters add uncertainty not included in the predictive variance, and one-step EI does not measure the total value of all future samples. Requiring the stopping test twice reduces the last two errors to 0.5% and 0.6%.</p>
+
+    <h3>The surrogate remains useful after the optimum is found</h3>
+    <p>The paper devotes a full section to sensitivity analysis and visualization. In a 36-variable circuit example, a variance decomposition identifies two variables that, with their interaction, explain 66.4% of the surrogate's variation. This is important for the book's broader argument: a learned model can support understanding and trade-off analysis, not only return a single recommended point.</p>
+
+    <h3>Several modern research areas already appear as open problems</h3>
+    <p>The discussion names noisy objectives, nonlinear constraints, derivative observations, numerical instability when sampled points cluster, and multi-fidelity optimization. It also acknowledges that the original branch-and-bound machinery becomes costly in higher dimensions. Later papers in this module mostly refine one of these weak points, while keeping the same surrogate-plus-acquisition loop.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>This is the first paper in the Decide pillar. The Recognize papers asked how a trained model can return an inference result quickly. EGO asks a different question: when each real experiment is expensive, which experiment should we run next?</p>
+
+    <h4>1. Learn a cheap map of an expensive landscape</h4>
+    <p>Suppose a crash simulation takes twenty hours. You cannot test every design. EGO evaluates a small, well-spread set of designs and fits a smooth map through the results. That map predicts performance at untested designs and, just as important, says where its predictions are uncertain.</p>
+
+    <h4>2. Do not trust the map before checking it</h4>
+    <p>The authors remove each observed point in turn and ask whether the model could have predicted it from the others. Large, systematic misses are a warning. This validation step is easy to overlook, but it is central to the original workflow. A confident acquisition rule built on a bad surrogate only makes bad decisions faster.</p>
+
+    <h4>3. Improvement joins ambition with doubt</h4>
+    <p>A candidate looks useful for either of two reasons. It may be predicted to beat the current best design, or the model may be uncertain enough that a surprise win is plausible. Expected Improvement puts both reasons on one scale. After sampling the promising local region, uncertainty falls there, so the rule can move outward and test a less familiar region.</p>
+
+    <h4>4. The stopping rule is helpful, but not literal truth</h4>
+    <p>If no point has much expected improvement left, stopping is reasonable. But the experiments show that estimated uncertainty can be too small and that a one-step calculation misses the value of a longer sequence of tests. The paper is unusually candid about this. EI is a decision aid grounded in a model, not a certificate that nothing better exists.</p>
+
+    <h3>Going deeper: what the rest of Part II changes</h3>
+    <p>Keep the EGO loop in mind while reading the next four papers: choose initial observations, fit a probabilistic surrogate, optimize an acquisition function, evaluate the expensive objective, update, and repeat. <a href="spearmint.html">Spearmint</a> adapts the loop to noisy machine-learning experiments and practical constraints. <a href="frazier.html">Frazier</a> gives the modern tutorial treatment. <a href="shahriari.html">Shahriari et al.</a> map the wider design space of surrogates and acquisitions. <a href="garnett.html">Garnett</a> turns the field into a full decision-theoretic textbook. The names and machinery change, but the basic problem stays the same.</p>
     <!-- DISCUSSION:END -->
   </section>
 
