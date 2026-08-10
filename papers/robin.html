@@ -42,14 +42,54 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>Robin closes an intellectual loop around a human laboratory</h3>
+    <p>Robin links literature search, hypothesis generation, experimental planning, data analysis, and follow-up hypotheses. It uses Crow and Falcon, both based on PaperQA2, for concise and deep literature work. Finch writes and runs analysis code in Jupyter. Human researchers still choose what to test, perform every laboratory experiment, and upload the data with an analysis request.</p>
+
+    <h3>The therapeutic search is staged</h3>
+    <p>Given a disease name, Robin proposes ten disease mechanisms and an in vitro assay for each. An LLM judge ranks the choices. For the selected mechanism, Robin generates 30 existing-drug candidates, gathers a detailed evidence report for each, and ranks them through pairwise comparisons. This structure narrows a broad disease question into a testable screen.</p>
+
+    <h3>The dry-AMD path began with known fragments</h3>
+    <p>Robin reviewed 151 papers to propose mechanisms for dry age-related macular degeneration, then about 400 papers to connect retinal pigment epithelium phagocytosis with possible treatments. It recommended increasing phagocytosis and proposed ROCK inhibition among the strategies. One retrieved paper had already shown that Y-27632 improved phagocytosis in low-performing human RPE cells. The novelty was the therapeutic connection to dry AMD, not discovery of ROCK biology from nothing.</p>
+
+    <h3>Experiments changed the next question</h3>
+    <p>Researchers selected five initial candidates and substituted available pHrodo beads for Robin's proposed photoreceptor substrate. Finch analyzed the flow-cytometry output, and Robin recommended RNA sequencing after Y-27632 treatment. That analysis found a three-fold rise in ABCA1 expression and pathway changes involving actin organization, small GTPase signaling, and autophagy. These results suggest mechanisms, but the paper notes that further work is needed to separate drug-specific effects from general effects of increased phagocytosis.</p>
+
+    <h3>The second round identified ripasudil</h3>
+    <p>Robin used the first result to propose another ten compounds. Ripasudil, a ROCK inhibitor approved for glaucoma in Japan, produced the strongest effect in the assay. Finch estimated a 7.5-fold phagocytosis increase over the control, while the authors' human analysis estimated 1.75-fold. Both found an increase, but the large numerical disagreement shows how analysis choices can change the apparent effect size.</p>
+
+    <h3>Finch uses repeated analysis trajectories</h3>
+    <p>Biological analysis is not fully determined by the data. Gating, filtering, and statistical choices matter, and Finch is stochastic. Robin can run ten independent Finch trajectories and synthesize a consensus. Each trajectory leaves executable notebook code, which helps inspection, but consensus among similar agents is not the same as an independent measurement or expert check.</p>
+
+    <h3>The autonomy claim has clear boundaries</h3>
+    <p>The paper calls Robin semi-autonomous even while arguing that it automates the key intellectual steps. That qualification matters. Humans select candidates, adapt assays, supply prompts for the desired analysis, align the RNA-seq reads, execute experiments, and decide when a satisfactory candidate has emerged. Robin also tended to call tools in a fixed order, so the authors converted it into a more stable notebook workflow.</p>
+
+    <h3>What remains unproven</h3>
+    <p>The work demonstrates an interesting in vitro drug-repurposing lead, not a treatment for dry AMD. Dose response, longer exposure, patient-derived models, animal studies, safety, mechanism, and clinical efficacy remain open. The hypothesis generator is demonstrated deeply on one disease, while ten other diseases receive generated proposals without comparable experimental validation.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. Start with a disease, end with an assay</h4>
+    <p>Robin does not ask a model to name a drug immediately. It first asks which disease process could be measured in cells. Only then does it look for compounds that might change that process. This makes the hypothesis experimentally actionable and exposes weak ideas early.</p>
+
+    <h4>2. The laboratory is the source of new information</h4>
+    <p>The first screen tells Robin which proposals worked in this assay. The RNA-seq experiment then asks why. A later candidate round uses those findings to search within a more informed region. This is the clearest advance over a literature-only agent: evidence from the world changes the next hypothesis.</p>
+
+    <h4>3. Automated analysis still contains judgment</h4>
+    <p>Finch can produce code and figures, but a request such as flow-cytometry analysis leaves many choices unstated. The difference between its 7.5-fold estimate and the human 1.75-fold estimate is a concrete warning. Reproducible code lets us locate the difference; it does not remove the need to resolve it.</p>
+
+    <h4>4. Repurposing is a good but limited proving ground</h4>
+    <p>Existing drugs have known targets and some safety history, so literature synthesis can uncover connections that researchers missed. But a cellular phenotype may not translate to the complex disease in a person. The system has found a reason to investigate ripasudil, not a reason to prescribe it.</p>
+
+    <h3>Connection to Co-Scientist</h3>
+    <p>Co-Scientist invests heavily in evolving a population of hypotheses before experts choose experiments. Robin uses a more fixed funnel and reconnects experimental data to the next round. Together they show two ways to spend agentic effort: deeper search before testing, or a tighter cycle between search and evidence. Neither system physically automates the laboratory in these papers.</p>
+
+    <h3>The key takeaway</h3>
+    <p>Robin makes the scientific loop more concrete. Its contribution is not an independent AI scientist, but an integrated workflow that can carry a question from literature to analysis and back again. The most valuable next step is stronger validation of both the biological result and the agent's analytical decisions.</p>
     <!-- DISCUSSION:END -->
   </section>
 
