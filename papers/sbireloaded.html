@@ -42,14 +42,52 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>What's new versus the original sbi (Fig. 1 marks it explicitly, in red)</h3>
+    <p>The paper literally diagrams its own feature growth — new capabilities since <a href="sbi.html">the 2020 release</a> are marked in red directly on the architecture figure:</p>
+    <ul>
+      <li><strong>Simulator &amp; prior</strong> — use pre-simulated data directly (not just a live simulator callable); combine independent priors; build <em>truncated</em> priors for sequential/active methods.</li>
+      <li><strong>Method classes</strong> — NPE, NLE, and NRE each now have both amortized <em>and</em> sequential versions of every algorithm (v1 leaned toward sequential methods; both modes are now uniformly supported).</li>
+      <li><strong>Neural networks</strong> — (continuous) normalizing flows, score-matching, and flow-matching added; embedding networks now available pre-configured or fully customizable.</li>
+      <li><strong>Sampling</strong> — MCMC with chains parallelized across observations, variational inference, importance sampling with sequential importance resampling, and rejection sampling all newly added.</li>
+      <li><strong>Diagnostics</strong> — simulation-based calibration (SBC), expected coverage, local C2ST, and TARP all newly added.</li>
+      <li><strong>Analysis</strong> — marginal plots, conditional plots, and sensitivity analysis newly added.</li>
+    </ul>
+    <p>In short: v1 was an algorithm library; this is a full workflow toolkit — training, sampling, diagnosing, and visualizing, not just fitting.</p>
+
+    <h3>A license change worth naming plainly</h3>
+    <p>The original sbi shipped under AGPLv3, a strong copyleft license that can complicate commercial or proprietary use. sbi reloaded ships under <strong>Apache 2.0</strong> — a meaningfully more permissive license. A real, concrete change in how freely this tool can be built upon, not just a technical upgrade.</p>
+
+    <h3>A genuine ecosystem consolidation signal</h3>
+    <p>The paper's own footnote states plainly: "The development of the Lampe package has stopped in favor of the sbi package in July 2024." One of the competing libraries this reading order has been tracking as a separate option didn't just fall behind — it was formally discontinued, with its own maintainers redirecting effort into sbi. Worth reading as real evidence of consolidation in this specific software space, not just marketing language from sbi's own authors.</p>
+
+    <h3>Neural networks and sampling, precisely</h3>
+    <p>Now supports two separate normalizing-flow backends (<code>nflows</code> and <code>Zuko</code>), diffusion models, mixture density networks, and flow matching (via Zuko) — plus a broad set of embedding networks (MLPs, CNNs, and permutation-invariant networks) for automatically learning summary statistics from high-dimensional simulator output, the same "let a network find the summary statistics" idea seen in <a href="zammit.html">Zammit-Mangion et al.</a> For NLE/NRE specifically, sampling now includes vectorized MCMC, variational inference, rejection sampling, and importance sampling — plus direct wrappers to use Pyro's and PyMC's own MCMC samplers, rather than reimplementing them. Inference works for single or multiple i.i.d. observations, with importance sampling available to correct posterior inaccuracies whenever the true likelihood is accessible — the same corrective-refinement idea used by <a href="metabeta.html">metabeta</a> and <a href="effortless.html">NPE-PFN</a>, appearing here as a built-in library feature rather than something each paper reimplements from scratch.</p>
+
+    <h3>Diagnostics: a more precise successor to C2ST</h3>
+    <p><strong>Local C2ST</strong> is a genuine refinement worth understanding on its own: standard C2ST (classifier two-sample test) gives one global number for how distinguishable an approximate posterior is from the truth, averaged across everything; <em>local</em> C2ST checks this per-observation instead, catching the case where a method is well-calibrated on average but quietly bad for a specific kind of observation. Combined with <strong>TARP</strong> (a newer general accuracy-testing method for posterior estimators) and simulation-based calibration, this is a substantially more rigorous diagnostic suite than the original release shipped with — direct infrastructure support for the calibration concerns raised repeatedly across this whole library.</p>
+
+    <h3>Related software, updated (Sec. 3)</h3>
+    <p>Contrasts itself against likelihood-requiring MCMC/PPL toolboxes (Pyro, NumPyro, Stan, Turing.jl — all needing a differentiable, in-framework model) versus the neural SBI libraries proper: <a href="bayesflow1.html">BayesFlow</a> (amortized-only, posterior + likelihood focus — consistent with BayesFlow 2's own self-description), Swyft (ratio-estimation specialist), sbijax (a JAX-based implementation of a subset of methods), and the now-discontinued Lampe.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Read <a href="sbi.html">sbi.html</a> first. This paper's own Figure 1 does the comparison for you — it's the same diagram as the original, with everything added since marked in red, which is about as directly as a paper can show you "here's exactly what changed."</p>
+
+    <h4>1. From "here's an algorithm" to "here's the whole job"</h4>
+    <p>The 2020 version answered one question well: given a simulator and some data, estimate a posterior. This version answers the questions that come <em>after</em> that one too: is the posterior any good (diagnostics), can I see it clearly (visualization), and can I feed it into the MCMC tools other scientists already use (Pyro/PyMC wrappers)? That's the difference between a calculator and a full workbench.</p>
+
+    <h4>2. A quiet but real signal about which tools are winning</h4>
+    <p>It's easy to assume every competing open-source library just keeps existing forever, side by side. Here's a concrete counterexample: one of the libraries this reading order has been tracking as a genuine alternative — Lampe — stopped being developed, and its own team pointed users toward sbi instead. That's a real, checkable fact about how this specific corner of the software ecosystem consolidated, not a matter of opinion about which tool is "better."</p>
+
+    <h4>3. Checking your work in more places, not just one</h4>
+    <p>Imagine grading a weather forecaster not just on "were they right on average across the whole year" but "were they right specifically on the days they said 80% chance of rain." That's the intuition behind local C2ST versus the older, single-number version of the same test — it catches problems that only show up for certain kinds of observations, which a single average score can hide completely.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>Worth comparing this paper's growth trajectory directly against <a href="bayesflow2.html">bayesflow2.html</a>'s — both papers describe strikingly similar journeys (from a focused algorithm library to a full workflow toolkit with diagnostics and visualization built in), released within roughly a year of each other. Worth asking, once both are fresh: did the two teams converge on similar answers because the requirements of real ABI workflows genuinely demand these features, or because each library was reacting to seeing the other add them first?</p>
     <!-- DISCUSSION:END -->
   </section>
 
