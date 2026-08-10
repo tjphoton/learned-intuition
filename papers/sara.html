@@ -42,14 +42,49 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>Agentic BO makes the optimization policy editable at run time</h3>
+    <p>Brunzema et al. distinguish standard BO's fixed policy from an agent-controlled loop. In standard BO, bounds, surrogate, acquisition, objectives, and constraints are set before the campaign. In agentic BO, an LLM can inspect evidence, request proposals, select or override them, change the configuration, and respond to new natural-language instructions while keeping a Bayesian backend.</p>
+
+    <h3>Sara and lenz have deliberately separate responsibilities</h3>
+    <p>Sara is the reasoning agent. lenz is a BoTorch and GPyTorch backend with a structured command-line interface. Its raw trial log is the source of truth, and surrogates are rebuilt from that log after configuration changes. Sara can query predictions, acquisition scores, cross-validation diagnostics, incumbents, histories, and Pareto fronts; request candidates; submit observations; and change bounds, acquisition functions, objectives, or constraints.</p>
+
+    <h3>Proposal and commitment are no longer the same action</h3>
+    <p>The backend may propose a point by optimizing an acquisition function, but Sara decides whether to evaluate it. She can ask for alternatives, narrow the active region, score a hand-crafted candidate, or override the proposal. Only an oracle evaluation consumes the black-box budget. Probes and reconfigurations consume tokens and compute, but the main experiments do not optimize those metalevel costs.</p>
+
+    <h3>Without semantic priors, the system falls back toward classical BO</h3>
+    <p>On opaque synthetic functions from 2 to 20 dimensions, Sara performs roughly on par with Ax and better than LLM-only baselines. The explicit surrogate becomes especially valuable on random 12-D and 16-D GP sample paths that cannot be recognized from pretraining. This is the intended graceful fallback: when language provides no useful clue, uncertainty-aware search carries the run.</p>
+
+    <h3>Natural-language priors help on named scientific and AutoML tasks</h3>
+    <p>On LCBench and reaction-yield benchmarks, descriptions of parameter meanings and chemistry guide warm starts and later local refinement. Removing the descriptions raises early regret and can worsen final performance. Tool-use traces show that context changes behavior throughout the campaign, not only the initial points.</p>
+
+    <h3>Mid-run reformulation is the distinctive demonstration</h3>
+    <p>In a scaling-law task, the initial goal is minimum validation loss under a 500-PFLOP constraint. When the user later asks for the loss-compute trade-off from 200 to 700 PFLOP, Sara promotes compute to a second objective, replaces the constraint, switches to a hypervolume acquisition, and reuses all prior trials. Standard BO can support these pieces, but not interpret and execute the change by itself.</p>
+
+    <h3>The ablations reveal both value and fragility</h3>
+    <p>Removing lenz reduces reliability, especially on unfamiliar GP paths. Stronger model capability matters for competent tool use, though more reasoning effort does not consistently help and can worsen warm starts. Different model families work, but token use differs. The system is nondeterministic and shows tool-use inertia: an early calling pattern tends to persist.</p>
+
+    <h3>Scope is narrower than open-ended autoresearch</h3>
+    <p>Sara assumes a bounded space of real, categorical, and ordinal parameters that a GP can model. Code diffs and other structured artifacts are outside the current system. Results also depend on prompt and interface wording. Agentic BO expands who controls the search, but the experiment remains a well-typed black-box optimization campaign.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Sara puts an LLM in the driver's seat but keeps a statistical instrument panel. The model can change strategy, while the backend preserves measured data and shows where the search is uncertain.</p>
+
+    <h4>1. The agent manages a tool, not a hidden intuition alone</h4>
+    <p>Sara must ask for diagnostics, inspect candidates, and record real outcomes through explicit commands. This creates an auditable boundary between language reasoning and numerical inference.</p>
+
+    <h4>2. Flexibility is most valuable when the problem changes</h4>
+    <p>Switching from one constrained objective to a Pareto frontier is not a normal acquisition update. It changes the meaning of success. Because the raw outcomes stay intact, the agent can reinterpret old evidence under the new goal without rerunning experiments.</p>
+
+    <h4>3. More control creates new failure modes</h4>
+    <p>The agent can choose a poor bound, misuse a diagnostic, settle into a repetitive tool pattern, or spend excessive tokens deliberating. Classical BO is rigid, but its rigidity also makes behavior easier to reproduce.</p>
+
+    <h3>Going deeper: compare with the paper's own cautionary neighbor</h3>
+    <p><a href="arewethere.html">Are We There Yet?</a> shows that fluent reflection can hide failure to use feedback. Sara's explicit surrogate and no-prior benchmarks answer part of that criticism. A stronger test would still permute outcomes, corrupt diagnostics, and audit whether tool choices and submitted points change for the right reasons.</p>
     <!-- DISCUSSION:END -->
   </section>
 
