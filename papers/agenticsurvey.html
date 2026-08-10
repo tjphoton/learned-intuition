@@ -42,14 +42,51 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>Why this survey comes first</h3>
+    <p>This paper gives us a map of agentic science before we inspect individual systems. Its main distinction is between AI that answers a scientific question and AI that helps choose, execute, and revise the next step. The survey organizes that shift by autonomy level, core capability, research stage, and scientific domain.</p>
+
+    <h3>Four levels of scientific AI</h3>
+    <p>Level 1 is a computational oracle: a specialist model predicts a structure, property, or outcome. Level 2 is an automated research assistant: it can use tools and complete a defined sub-procedure, but a person supplies the scientific goal and hypothesis. Level 3 is the paper's full agentic ideal: a system pursues a broad goal through hypothesis, experiment, analysis, and revision with little intervention. Level 4 is explicitly prospective. It describes an AI that invents new instruments, methods, or scientific frameworks, not merely new findings inside an existing framework.</p>
+
+    <h3>Task autonomy is not goal autonomy</h3>
+    <p>The most useful boundary is between Levels 2 and 3. A system can run a long and complicated workflow while remaining at Level 2 if a person defined the question and the allowed procedure. Level 3 requires control over the scientific loop itself, including changing hypotheses in response to evidence. This is a stricter test than counting tools, agents, or hours of unattended execution.</p>
+
+    <h3>Five capabilities support the loop</h3>
+    <p>The survey identifies planning and reasoning, tool integration, memory, multi-agent collaboration, and optimization or evolution as the foundations of a scientific agent. These capabilities support four recurring processes: forming hypotheses, planning and running experiments, analyzing results, and synthesizing or validating what was learned. The framework is useful because it lets us ask where a system is strong instead of assigning it a vague label such as autonomous.</p>
+
+    <h3>Evidence spans very different domains</h3>
+    <p>The review covers life science, chemistry, materials, physics, and astronomy. But the examples are not all equivalent. Some are tool-using assistants, some automate a laboratory segment, and a smaller set claims a more complete discovery cycle. The survey is therefore a taxonomy and literature guide, not proof that broad Level 3 autonomy is already routine.</p>
+
+    <h3>Reproducibility changes when the path is stochastic</h3>
+    <p>Reproducing an agentic result means more than rerunning final code. Prompt wording, model version, tool state, intermediate decisions, memory, and environmental conditions can redirect the discovery path. The authors call for logs of agent states, policies, justifications, and contingencies. In practice, a credible claim also needs independent experimental confirmation and a record of human interventions.</p>
+
+    <h3>Novelty and reliability are separate tests</h3>
+    <p>A plausible hypothesis may be false, and a correct-looking hypothesis may merely restate something in the training data. The survey treats novelty validation, transparent reasoning, ethics, dual-use risk, and accountability as central scientific problems. Human experts remain responsible for setting boundaries, judging significance, and deciding what evidence is strong enough to enter the scientific record.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. From prediction to participation</h4>
+    <p>Earlier AI for science usually took a well-formed input and returned an answer. An agent participates in the process that creates the input: it decides what to inspect, which tool to call, what experiment to try, and how the result should change the plan. That is why agency is about control over a sequence of decisions, not simply model accuracy.</p>
+
+    <h4>2. The autonomy ladder is a diagnostic tool</h4>
+    <p>Ask who chose the research question, who formed the hypothesis, who selected the experiment, who interpreted failure, and who decided to continue. The more of those decisions remain with the human, the closer the system is to Level 2. This avoids mistaking polished orchestration for independent science.</p>
+
+    <h4>3. A scientific agent is a system, not one model</h4>
+    <p>The language model may plan and communicate, but scientific work also depends on retrieval, code, simulators, instruments, databases, memory, and evaluators. Multiple agents can divide roles, yet adding roles does not guarantee better science. The important question is whether the whole system produces traceable decisions and evidence.</p>
+
+    <h4>4. The strongest claims need the strongest audit trail</h4>
+    <p>Long autonomous runs create more places for silent errors to compound. A final result cannot tell us which branch was lucky, which claim came from prior knowledge, or where a person corrected the system. Logs and validation are not administrative extras. They are part of the evidence.</p>
+
+    <h3>How to read the papers that follow</h3>
+    <p>Use this survey's framework, but do not accept its labels without checking the source paper. For each system, track the goal supplied by humans, the decisions delegated to the agent, the tools and feedback available, the real experiments completed, and the form of independent validation. The next papers make these distinctions concrete: some close a laboratory loop, some generate and test hypotheses, and others automate the writing and review cycle. Their scopes differ even when all are called autonomous research.</p>
+
+    <h3>The key takeaway</h3>
+    <p>Agentic science is best understood as a spectrum of decision rights. The frontier is not simply a smarter language model. It is a reliable, auditable system that can choose useful scientific actions, learn from their outcomes, and know when human judgment is still required.</p>
     <!-- DISCUSSION:END -->
   </section>
 
