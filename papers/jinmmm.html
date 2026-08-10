@@ -36,20 +36,58 @@
 
   <section class="block">
     <span class="eyebrow">Summary</span>
-    <p class="summary-text">The incumbent standard for MMM: hierarchical Bayesian regression with adstock (carryover) and Hill-function saturation, fit via MCMC, one brand at a time. Read as the baseline to benchmark against, not a method to imitate mechanically — this is the thing amortized inference would replace.</p>
+    <p class="summary-text">The incumbent standard for MMM: flat (non-hierarchical) Bayesian regression with adstock (carryover) and Hill-function saturation, fit via MCMC, one brand at a time. Its own central finding — small single-brand samples leave estimates prior-dominated and badly biased — is why the paper's own follow-ups pool across brands or geographies for more informative priors. Read as the baseline to benchmark against, not a method to imitate mechanically.</p>
   </section>
 
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>The model, precisely (Eq. 7)</h3>
+    <p>y_t = τ + Σₘ βₘ·Hill(adstock(x_t,m)) + Σ_c γ_c·z_t,c + ε_t — a flat linear regression on <em>transformed</em> media spend, for one brand, one geography, at a time. Two transformations, applied in sequence (adstock first, then shape), are the whole methodological contribution.</p>
+
+    <h3>Carryover (adstock): two functional forms</h3>
+    <p>Adstock is a weighted average of current and past spend over a window of L weeks (L=13 treated as effectively infinite, weights below 10⁻⁷ beyond that). <strong>Geometric decay</strong> w(l)=αˡ assumes the ad's effect peaks immediately at exposure and decays at retention rate α. <strong>Delayed adstock</strong> w(l)=α^((l−θ)²) — proportional to a Gaussian density centered at delay θ — lets the peak effect happen θ weeks <em>after</em> exposure, for media that build up effect gradually rather than peaking instantly.</p>
+
+    <h3>Shape (diminishing returns): the Hill function, and a real identifiability warning</h3>
+    <p>βHill(x;K,S) — a flexible S-shaped or concave dose-response curve borrowed from pharmacology, with half-saturation point K and slope S, scaled by β for a per-channel maximum effect. The paper demonstrates directly (Fig. 2) that this three-parameter curve is <strong>essentially unidentifiable in common scenarios</strong>: when S=1, or when K falls outside the observed range of media spend, meaningfully different (K,S,β) triples produce nearly indistinguishable curves within the data actually observed. This isn't a hypothetical concern — it's demonstrated with concrete numbers and shown to matter later in both the simulation study and the real-data application.</p>
+
+    <h3>A genuinely important, precise methodological warning</h3>
+    <p>ROAS and mROAS (Return on Ad Spend / marginal ROAS — Eq. 10–11) must be computed by propagating <em>full posterior samples</em> through the formulas, never by plugging in single point summaries (posterior means) of individual parameters. Because the parameters are correlated, doing the latter "is not recommended and could produce wrong results." A precise, specific methodological trap worth remembering whenever any Bayesian model's outputs feed into a derived quantity.</p>
+
+    <h3>Optimal media mix: two Bayesian approaches, with a genuine trust signal built in</h3>
+    <p>Maximizing predicted sales subject to a budget constraint (Lagrangian optimization) can be done two ways: (1) average the objective across <em>all</em> posterior samples first, then optimize once — more stable; or (2) optimize separately for <em>each</em> posterior sample, yielding a full posterior <em>distribution</em> over the optimal mix. The second approach is the more honest one: in one tested scenario, that distribution came out <strong>multimodal</strong> (three separate peaks) — a direct, visible signal that the "optimal" recommendation is unreliable at that budget level, not something a single point estimate could ever reveal.</p>
+
+    <h3>The central, sobering finding — the reason this paper is "the incumbent," not "the solution"</h3>
+    <p>Across 500 simulated datasets at a realistic sample size (2 years of weekly data, ~100 points), the fitted shape and adstock curves are <strong>substantially biased</strong> — relative bias up to <strong>−39.7%</strong> for one channel's βHill curve. The paper traces this directly to sample size and signal strength, not model error: "when the sample size is small and the signal is weak, the posterior distribution is mostly determined by the priors... the data is not strong enough to correct any bias introduced by the priors." Repeating the same simulation with 60 years of data (an unrealistic amount, included purely to demonstrate the asymptotic limit) shrinks the bias to single digits. Separately, testing three different priors each for β and for K shows materially different resulting bias — direct, repeated confirmation that prior choice, not just data, is driving the answer whenever a real dataset is this size-constrained.</p>
+
+    <h3>Real application: a shampoo advertiser, BIC model selection, and an honest diagnostic failure</h3>
+    <p>2.5 years of weekly data, 5 media channels, three highly correlated control variables (price/distribution/promotion). A genuinely useful applied trick: orthogonalizing the correlated controls (regressing distribution and promotion on price, using the residuals) cut STAN's sampling time from 3,040 seconds to 75 seconds — a 40× speedup from data preprocessing alone, no model change. Comparing four model specifications (delayed vs. geometric adstock × Hill vs. simpler "reach" shape) via BIC: since all four fit the data almost identically well, BIC strongly favors the simplest specification (geometric adstock + reach), penalizing the fancier delayed-adstock/Hill combination for parameters that don't earn their keep on this dataset — a direct, real-world instance of the identifiability problem demonstrated earlier in the paper. A final honest note: residual autocorrelation persists out to lag 15 weeks even in the selected model — the paper reports this directly as "a sign of model misspecification," not something smoothed over.</p>
+
+    <h3>The paper's own pointer to its remedy — and the modern, amortized echo of it</h3>
+    <p>The conclusion names two direct follow-ups, neither covered in this reading order: Wang et al. (2017) pools data across similar brands within a category into a hierarchical Bayesian model; Sun et al. (2017) uses sub-national geo-level data instead of national-level data with a similar hierarchical structure. Both are built specifically to derive more informative priors than a single brand/geo dataset can support — directly addressing this paper's own central weakness. This is precisely the problem <a href="metabeta.html">metabeta</a> demonstrates the amortized, neural version of: instead of fitting one hierarchical MCMC model per category (still expensive, still per-dataset), train one network once on simulated hierarchical data and reuse it instantly across an entire portfolio of brands. See Module 05's own framing of the gap this represents.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>This paper is the real-world "why does anyone need any of the other 40 papers in this library" answer, at least for the marketing-econometrics angle. It's a genuinely careful, honest piece of applied statistics — and its own most important finding is a confession about its own limits.</p>
+
+    <h4>1. Two curves stacked on top of each other, and why both are needed</h4>
+    <p>An ad you see today doesn't just affect today's sales — its influence lingers and fades over the following weeks (that's the "carryover" curve), and the relationship between how much you spend and how much extra sales you get isn't a straight line either (spend a little, get a little; spend a lot, you hit diminishing returns — that's the "shape" curve). This paper stacks both transformations on top of an otherwise ordinary regression, then fits it with Bayesian methods so the resulting estimates come with honest uncertainty instead of one falsely-precise number.</p>
+
+    <h4>2. When a fancier curve doesn't actually mean a better answer</h4>
+    <p>The paper shows something genuinely counterintuitive and important: giving a curve more flexibility (more parameters to bend its shape) doesn't automatically make the fitted answer more trustworthy — sometimes it just means many very different-looking parameter combinations all draw nearly the same curve within the range of data you actually have, so you can't tell which one is "true" even in principle. More flexibility bought nothing but more uncertainty in this case, which is exactly what the paper's own real-data model comparison (Section 8) later confirms directly: the fancier model didn't fit any better, so the simplest one won.</p>
+
+    <h4>3. The paper's own biggest, most honest finding</h4>
+    <p>Here's the sentence that matters most in the whole paper, paraphrased: when you don't have much data (which is the normal situation for a single brand's weekly numbers over a couple of years), your "informed guess going in" (the prior) ends up mattering more than the actual data in determining your final answer. That's not a subtle statistical footnote — it means two honest analysts, using the same data but slightly different starting assumptions, could walk away with meaningfully different conclusions about which ads are working. The paper doesn't hide this; it measures it directly and reports the size of the problem in percentage terms.</p>
+
+    <h4>4. The fix the paper points to, but doesn't build itself</h4>
+    <p>If the real problem is "not enough data for one brand alone," the obvious fix is "borrow strength from other, similar brands" — pool data across a whole category, or across different regions of the same brand, so the combined evidence is strong enough to actually inform the fit instead of leaving it up to guesswork. The paper names this fix and points to two companion papers that build it, but doesn't build it here itself. This is exactly the gap this whole library's "amortized inference" thread fills with a different tool: instead of a slow, custom-built pooled model per category, train one fast network once, on simulated data shaped like this exact problem, and reuse it instantly across the whole portfolio.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>Worth holding two comparisons side by side once <a href="nnn.html">nnn.html</a> (next in this reading order) is fresh: NNN is explicitly framed elsewhere in this library as "the neural alternative that abandons priors entirely" — read against this paper's own finding that priors dominate small-sample results, NNN's approach reads less like an arbitrary alternative and more like a direct, pointed response to exactly this paper's central weakness. And worth returning to <a href="metabeta.html">metabeta.html</a> once this page is fresh: metabeta's own "prior-sensitivity analysis across an entire portfolio in seconds" pitch is a direct, modern answer to the specific, expensive problem this paper spent Sections 6–7 measuring by hand across 500 separately-run MCMC simulations.</p>
     <!-- DISCUSSION:END -->
   </section>
 
