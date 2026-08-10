@@ -42,14 +42,66 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>What's new versus BayesFlow 1: a redesign, not a patch</h3>
+    <p>The paper is explicit: "Version 2 of BayesFlow represents a complete redesign." Six concrete changes over <a href="bayesflow1.html">the original</a>:</p>
+    <ul>
+      <li><strong>Multi-backend</strong> — built on Keras 3 instead of TensorFlow alone, running natively on JAX, PyTorch, or TensorFlow (auto-detected, or set explicitly via an environment variable). The case study in this paper deliberately picks JAX "for its fast performance, optimal reproducibility, and functional purity."</li>
+      <li><strong>An expanded generative family</strong> — v1 was built around normalizing flows; v2 natively supports normalizing flows, free-form flows, diffusion models, flow matching, and consistency models, with a unified interface so any of them can be swapped in for either posterior or likelihood estimation.</li>
+      <li><strong>New Approximator types</strong> — beyond the standard posterior/likelihood approximators: a <code>ScoringRuleApproximator</code> for learning arbitrary Bayes point estimators (posterior means, variances, quantiles) — a direct, native implementation of the loss-function-picks-the-target idea from <a href="zammit.html">Zammit-Mangion et al.'s neural Bayes estimators</a> — and a <code>GraphicalApproximator</code> for posteriors with complex probabilistic factorizations, such as multilevel and mixture models — the general-purpose version of the hierarchical local/global posterior split <a href="metabeta.html">metabeta</a> built by hand.</li>
+      <li><strong>Native hierarchical modeling</strong> — a <code>HierarchicalSimulator</code> class and matching approximators, where v1 required users to construct multilevel structure themselves.</li>
+      <li><strong>Bayesian sensitivity analysis as a first-class capability</strong> (Sec. 2.6) — extend the model with a context variable C representing "what varies" (a different prior width, a different model specification entirely), train the network on p(C,θ,D), and get answers under many different assumptions from one trained network instead of refitting per assumption.</li>
+      <li><strong>A dedicated Diagnostics module</strong> — graphical (loss curves, calibration ECDF plots) and numerical (e.g. a calibration test statistic) diagnostics as first-class, documented functions rather than something users build themselves.</li>
+    </ul>
+
+    <h3>The core pipeline, precisely (Fig. 2)</h3>
+    <p>Simulator → Adapter → Summary Network → Inference Network → Estimates → Diagnostics, with diagnostics feeding back into simulator/model choices. The <strong>Adapter</strong> (v2's more fully realized version of v1's "Configurator") is a single interface bundling stateless transforms — reshaping, constraining (e.g. forcing positivity), and labeling which variables are parameters versus data — and critically, most of its transforms are <em>invertible</em>, so a trained network's raw output can be traversed back through the adapter to recover original variable names and scales.</p>
+
+    <h3>The generative-family trade-off table — a genuinely useful reference (Table 1)</h3>
+    <ul>
+      <li><strong>Normalizing flows</strong> — constrained architecture, single-step sampling, <em>fast</em> density evaluation. (This is the family metabeta chose, and its own limitations section explains exactly why: speed over expressivity.)</li>
+      <li><strong>Free-form flows</strong> — semi-constrained, single-step, <em>moderate</em> density evaluation cost.</li>
+      <li><strong>Diffusion models</strong> — unconstrained, multi-step, <em>slow</em> density evaluation.</li>
+      <li><strong>Flow matching</strong> — unconstrained, multi-step, <em>slow</em> density evaluation.</li>
+      <li><strong>Consistency models</strong> — unconstrained, few-step, density evaluation <em>not available</em> at all.</li>
+    </ul>
+    <p>This table is the concrete backdrop for <a href="diffusion.html">the diffusion-models-in-SBI tutorial review</a> later in this module — that paper elaborates on exactly this speed/expressivity spectrum.</p>
+
+    <h3>Model misspecification: named, concrete techniques (Sec. 2.7)</h3>
+    <p>Detection: check whether real data looks "typical" relative to the training distribution, using an out-of-distribution or outlier-detection score on learned data embeddings — optionally "Gaussianizing" the embedding distribution during training specifically so a simple Mahalanobis-distance test becomes usable. Mitigation options once misspecification is suspected: train on a deliberately corrupted model to build in robustness; add Bayesian self-consistency losses or unsupervised domain adaptation; or, for datasets flagged as out-of-distribution after the fact, apply Pareto-smoothed importance sampling as a post-hoc correction (when a likelihood is available) — a more general, off-the-shelf version of the specific post-hoc importance-sampling correction metabeta built for its own mass-covering bias.</p>
+
+    <h3>Direct, explicit comparison against NeuralEstimators.jl and sbi (Sec. 5)</h3>
+    <ul>
+      <li><strong>vs. NeuralEstimators.jl</strong> (the Julia package associated with Zammit-Mangion's own group): BayesFlow ships both affine coupling and neural spline flows plus flexible latent spaces (Student-t, mixtures); NeuralEstimators.jl offers only affine coupling. BayesFlow also supports the full modern free-form generative family (diffusion, flow matching, consistency models); NeuralEstimators.jl does not.</li>
+      <li><strong>vs. sbi</strong>: sbi natively supports non-amortized and sequential/multi-round methods (repeated refinement targeted at one observation) that BayesFlow does not emphasize — BayesFlow's philosophy stays amortization-first, encouraging either direct sampling from a trained estimator or plugging trained likelihood/ratio networks into gold-standard MCMC samplers (PyMC, blackjax) rather than iterating per observation.</li>
+      <li><strong>Ensembling, a genuine BayesFlow-only capability</strong>: all three packages can bundle <em>already-trained</em> networks into an ensemble, but only BayesFlow can bundle <em>untrained</em> networks for <strong>joint training</strong>, with arbitrary sharing of summary or inference networks across ensemble members — treating the whole ensemble as one composite network trained in a single pass rather than many networks trained sequentially.</li>
+      <li><strong>Training-data flexibility</strong>: all three support offline training from data held in memory; BayesFlow additionally supports online training (simulating on the fly) and offline training from data streamed off-disk, for problems too large to hold in memory at once.</li>
+    </ul>
+
+    <h3>Stated future work</h3>
+    <p>Architecture combinations that mirror the probabilistic symmetries of the model being approximated (echoing the hierarchical/mixture themes above); ABI-specific loss functions for accuracy and robustness; post-hoc correction methods requiring minimal extra compute (explicitly including more advanced importance sampling — again, a generalization of exactly what metabeta built bespoke); interfaces to Stan and PyMC to simplify specifying simulators and log-densities; and automatic low-precision pretraining to scale to the largest Bayesian problems.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Read <a href="bayesflow1.html">bayesflow1.html</a> first. If v1 was "here's a working car," v2 is "here's the same car with a swappable engine, five engine choices instead of one, and a dashboard that tells you when something's wrong."</p>
+
+    <h4>1. Why "which deep-learning backend" is a real decision, not a technicality</h4>
+    <p>Under the hood, JAX, PyTorch, and TensorFlow are three different ways of telling a computer to do the same kind of math. Being locked into one (as v1 was, to TensorFlow) means you're stuck if your lab, your GPU cluster, or your collaborators standardized on a different one. v2's fix is to write the model description once and let it run on whichever engine is actually installed — the same recipe, three interchangeable kitchens.</p>
+
+    <h4>2. Five ways to represent "how confident am I," each with a different speed trade-off</h4>
+    <p>Table 1 is worth sitting with directly: it's a genuine menu, not marketing copy. Normalizing flows are the "instant but somewhat rigid" option — fast to both sample from and evaluate, but constrained in the shapes of uncertainty they can represent. Diffusion models and flow matching sit at the other end — much more flexible shapes, but slow, because generating one answer takes many small steps instead of one. Consistency models trade away the ability to even ask "how likely was this answer" at all, in exchange for being nearly as fast as normalizing flows despite the flexible underlying idea. None of these is simply "better" — which one you pick depends on whether you need speed, flexibility, or the ability to ask "how likely is this," and you usually can't have all three at once.</p>
+
+    <h4>3. A checklist for "is my model lying to me"</h4>
+    <p>This version adds something genuinely new: automated ways to notice when the real data you're feeding the model doesn't actually resemble anything it was trained on — the digital equivalent of a translator flagging "I don't recognize this language" instead of confidently mistranslating it anyway. That's a meaningfully different, and arguably more dangerous, failure mode than "the model is a bit overconfident" — a model can be well-calibrated on the training distribution and still be quietly wrong on data that doesn't belong to that distribution at all.</p>
+
+    <h4>4. What it means that metabeta's hand-built ideas are now "just a class you import"</h4>
+    <p>metabeta, a few papers back in this reading order, built two specific things from scratch: a way to handle "global plus per-group" hierarchical parameters, and post-hoc importance sampling to fix its own posterior's bias. This version of BayesFlow ships general-purpose versions of both as ready-made building blocks (<code>GraphicalApproximator</code> and generalized importance-sampling corrections). That's a nice, concrete illustration of a pattern worth watching for throughout this library: a research paper solves a specific problem by hand, and a later infrastructure paper turns that specific solution into a reusable, general-purpose tool.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>The direct comparison table against <strong>sbi</strong> (next in this reading order) and <strong>NeuralEstimators.jl</strong> (the software behind Zammit-Mangion's own paper) is worth re-reading once <a href="sbi.html">sbi.html</a> and <a href="sbireloaded.html">sbireloaded.html</a> are both covered — this paper stakes out a clear position (amortization-first vs. sbi's broader amortized-plus-sequential scope) that's worth checking against sbi's own self-description for whether both papers actually agree on the division of labor.</p>
     <!-- DISCUSSION:END -->
   </section>
 
