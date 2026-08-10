@@ -42,14 +42,46 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>DCBO adds causal time, not just a time coordinate</h3>
+    <p>Dynamic Causal Bayesian Optimization searches for an optimal intervention at every time step in a causal system whose inputs and outcome evolve. Static <a href="cbo.html">CBO</a> ignores temporal dependence. Adaptive BO models an objective changing with time but breaks causal dependencies among inputs. DCBO represents both within-slice causes and cross-time causal links in an unrolled graph.</p>
+
+    <h3>The target is a path of local interventions</h3>
+    <p>At time <em>t</em>, the method chooses an intervention set and values that optimize the current outcome, conditional on the interventions already implemented. It seeks a sequence of time-indexed actions rather than one static optimum or a general state-feedback policy. Exploratory interventions are assumed not to cause lasting state transitions; after testing, the system reverts before the decision intervention is applied.</p>
+
+    <h3>Past interventions shift the current causal surrogate</h3>
+    <p>The paper derives how the intervention-response function at time <em>t</em> depends on optimal interventions from earlier times. The dynamic causal GP combines observational data, current-time experimental data, and optimal interventional points from previous steps. A topology-dependent shift transfers what earlier actions revealed instead of restarting CBO from scratch at every time slice.</p>
+
+    <h3>Minimal intervention sets remain stable under stated assumptions</h3>
+    <p>When the causal structure is invariant over time, target mechanisms are additive in past-target and non-target parents, and there are no unobserved confounders, the graph can support the transfer formulas. One result shows that the minimal intervention set need not be recomputed at every time step when the time-slice graph stays unchanged.</p>
+
+    <h3>The algorithm separates exploration from the implemented decision</h3>
+    <p>At each time step, DCBO spends a budget of <em>H</em> exploratory interventions selected by cost-adjusted Causal EI. It then implements the best intervention found as the decision intervention and carries that result forward. This distinction keeps the method between static BO and reinforcement learning: it adapts over time, but it does not learn a policy over latent states.</p>
+
+    <h3>Results favor carrying causal information through time</h3>
+    <p>Across stationary, nonstationary, noisy, missing-data, multivariate, and independent-input synthetic cases, DCBO generally identifies the optimum faster than CBO, adaptive BO, and ordinary BO. It identifies the correct intervention set in 93% of replicates in key changing and multivariate cases. The real examples cover macroeconomic interventions and a predator-prey chemostat model, where it also reaches strong interventions faster.</p>
+
+    <h3>The assumptions mark a narrow but clear scope</h3>
+    <p>The graph is known, its topology is fixed within time slices, the main transfer result requires additivity and no hidden confounding, and exploratory actions must be reversible. The paper leaves changing graph structure, unobserved confounders, and causal discovery for future work. Those limits matter in any claim that DCBO represents real autonomous control.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>CBO chooses what to change in one causal snapshot. DCBO handles a sequence of snapshots, where yesterday's implemented action changes what today's experiment means.</p>
+
+    <h4>1. Time is part of the mechanism</h4>
+    <p>Adding time as an ordinary GP input says the landscape drifts. A causal time graph says which earlier variables produce which later variables. That extra structure lets evidence move forward for a reason, not only because two dates are close.</p>
+
+    <h4>2. Testing an action and committing to it are separate</h4>
+    <p>The algorithm can try several reversible interventions, observe their outcomes, then choose one intervention to carry into the next step. This is plausible for a simulator or digital twin. It is less plausible when every real intervention permanently alters the system.</p>
+
+    <h4>3. Reuse is the main efficiency gain</h4>
+    <p>Running static CBO at every date throws away what earlier interventions taught. DCBO places that information into the next surrogate. The gain depends on the causal transfer assumptions being right.</p>
+
+    <h3>Going deeper: why this is not yet an autonomous agent</h3>
+    <p>The action vocabulary, graph, budget, surrogate, and acquisition rule are fixed in advance. DCBO is adaptive but not reflective: it cannot question the graph, invent a new measurement, or revise the objective. The Part III systems add that open-ended layer, often with weaker guarantees and less controlled action spaces.</p>
     <!-- DISCUSSION:END -->
   </section>
 
