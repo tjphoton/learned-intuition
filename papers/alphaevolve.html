@@ -42,14 +42,54 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>FunSearch expanded into full-code evolution</h3>
+    <p>AlphaEvolve keeps the same core loop: language models propose code, automated evaluators score it, and an evolutionary database decides what becomes future context. It can evolve hundreds of lines across several functions and languages, optimize several metrics, use rich feedback, and afford evaluations that run for hours on accelerators.</p>
+
+    <h3>Humans define what; the system searches how</h3>
+    <p>A user supplies an initial working program, marks blocks that may change, and writes the evaluators. AlphaEvolve applies model-generated diffs rather than regenerating the whole file. The choice of representation matters: it can evolve a construction directly, a function that creates it, a search algorithm, or a solution and its search procedure together.</p>
+
+    <h3>Evolution uses richer context and stronger models</h3>
+    <p>Prompts include parent programs, other high-performing inspirations, scores, execution feedback, human background, and sometimes model-generated prompt advice. An ensemble mixes many cheap samples with occasional frontier-model proposals. A database inspired by MAP-Elites and island models preserves solutions across different behavioral niches. Ablations show losses when evolution, context, full-file editing, meta-prompts, or the larger model are removed.</p>
+
+    <h3>A 56-year matrix-multiplication bound moved</h3>
+    <p>Starting from a standard gradient search for tensor decompositions, AlphaEvolve developed better search algorithms for 14 matrix shapes. Its headline result is an exact rank-48 algorithm for multiplying two 4 by 4 complex matrices, improving on the 49 multiplications obtained by recursively applying Strassen's method. The evaluator rounded decompositions to integers or half-integers and checked exactness.</p>
+
+    <h3>Broad mathematical search found new constructions</h3>
+    <p>Across more than 50 construction problems, AlphaEvolve matched the best known result in about 75% of cases and improved it in about 20%. Examples include a kissing-number lower bound of 593 spheres in eleven dimensions, up from 592, and new bounds for autocorrelation, uncertainty, packing, and Erdős's minimum-overlap problem. External mathematicians proposed many problems and helped formulate them.</p>
+
+    <h3>Production deployment supplies unusually strong evidence</h3>
+    <p>A discovered scheduling heuristic was deployed across Google's fleet and recovered an average 0.7% of compute that would otherwise be stranded. A TPU tiling heuristic sped up the target kernels by 23% on average and reduced Gemini training time by 1%. Other cases report a 32% FlashAttention-kernel speedup and a 15% pre/postprocessing speedup, with randomized and expert correctness checks.</p>
+
+    <h3>Not every infrastructure claim has the same force</h3>
+    <p>The scheduling and kernel heuristics were deployed and measured in production. The TPU circuit rewrite was validated and integrated into an upcoming design, but downstream synthesis tools independently found the same simplification. The paper is a Google DeepMind white paper, so many proprietary evaluators, workloads, and systems cannot be independently reproduced from the document alone.</p>
+
+    <h3>Automatic evaluation is still the boundary</h3>
+    <p>AlphaEvolve is powerful because it can run a candidate and obtain trusted machine feedback. That excludes most manual experiments and many questions whose value cannot be reduced to a fixed score. It can optimize a stated objective with exceptional reach, but people still choose the problem, encode its constraints, audit the result, and decide whether deployment is worthwhile.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. It evolves the experimenter, not only the answer</h4>
+    <p>On many mathematical tasks, the final object is hard to search directly. AlphaEvolve instead writes a program that searches for better objects. Early versions can make large rough gains; later versions can polish a strong construction. The search method adapts to the local shape of the problem.</p>
+
+    <h4>2. More code creates more leverage</h4>
+    <p>FunSearch changed one short function. AlphaEvolve can rewrite initialization, losses, optimizers, schedules, and control flow together. That opens harder problems because an improvement may require coordinated changes. It also raises the need for stronger evaluators because the agent has more ways to exploit a specification.</p>
+
+    <h4>3. Production systems offer reality-based feedback</h4>
+    <p>A simulator narrows candidates, held-out workloads test transfer, and deployment reveals whether the gain survives real traffic. This is a better evidence chain than optimizing a benchmark alone. Correctness-by-construction and expert review further reduce the chance that speed came from changing the intended computation.</p>
+
+    <h4>4. Self-improvement is present but modest</h4>
+    <p>The system improved kernels used to train its own underlying model, producing a 1% training-time reduction. That is a real feedback loop, but it unfolds over months and depends on extensive human-built infrastructure. It is not an uncontrolled recursive takeoff.</p>
+
+    <h3>Connection to FunSearch</h3>
+    <p>FunSearch established that model-generated program mutations plus exact scoring could yield new mathematics. AlphaEvolve scales the editable unit, context, model strength, evaluation cost, and number of objectives. The price of that generality is a larger human task in building robust problem environments.</p>
+
+    <h3>The key takeaway</h3>
+    <p>AlphaEvolve is the strongest example in this reading path of AI producing verified mathematical and engineering gains. Its success does not erase the autonomy boundary. It shows how far search can go once experts turn an important problem into executable code and reliable feedback.</p>
     <!-- DISCUSSION:END -->
   </section>
 
