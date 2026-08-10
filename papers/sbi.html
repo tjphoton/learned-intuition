@@ -42,14 +42,48 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>This is where SNPE / SNLE / SNRE are actually named — a correction owed to cranmer.html</h3>
+    <p>Earlier in this reading order, an early pass through <a href="cranmer.html">Cranmer et al.</a> mistakenly attributed the acronyms NPE/NLE/NRE and the SNPE-A/B/C leakage-bug history directly to that paper — later corrected once the actual PNAS text was checked and found not to contain them. This toolkit paper is where that history is genuinely, correctly documented: sbi implements three families by name — <strong>Sequential Neural Posterior Estimation (SNPE)</strong>, specifically SNPE-C (Greenberg, Nonnenmacher &amp; Macke's "Automatic Posterior Transformation," 2019 — the fix for the earlier SNPE-A leakage problem); <strong>Sequential Neural Likelihood (SNLE)</strong> (Papamakarios, Sterratt &amp; Murray, 2019); and <strong>Sequential Neural Ratio Estimation (SNRE)</strong> (Hermans, Begy &amp; Louppe, 2020, plus a contrastive-learning variant from Durkan, Murray &amp; Papamakarios). The "sequential" leakage-and-fix history is real — it just belongs here, not in Cranmer's 2020 survey.</p>
+
+    <h3>A brief but real lineage: delfi → lfi → sbi</h3>
+    <p>sbi succeeds <strong>delfi</strong> (Mackelab's earlier package, built on Theano — discontinued once Theano itself was discontinued as a project). The sbi codebase itself started as a fork of <strong>lfi</strong>, developed by Conor Durkan. It's closely integrated with PyTorch and uses <strong>nflows</strong> (Durkan, Bekasov, Papamakarios &amp; Murray) for its flow-based density estimation.</p>
+
+    <h3>What sbi actually returns: a NeuralPosterior object</h3>
+    <p>The inference step returns a <code>NeuralPosterior</code> object exposing the same API surface as a standard PyTorch probability distribution — sample from it, and (if the chosen algorithm supports density evaluation — recall not all three families do equally cheaply) evaluate its density directly. A deliberately familiar interface for anyone who already works in PyTorch.</p>
+
+    <h3>Practical engineering for messy, pre-existing simulators</h3>
+    <p>Works with any simulator that can be wrapped in a plain Python callable — handles automatic shape inference, input standardization, and failed-simulation handling so users don't have to write that plumbing themselves. Leverages vectorization and optional <code>joblib</code>-based parallelization to maximize simulator throughput, and supports an optional trainable summarizing network for dimensionality reduction, sparing users manual feature engineering — the same "let a network find the summary statistics" idea covered conceptually in <a href="zammit.html">Zammit-Mangion et al.</a></p>
+
+    <h3>Two interface levels — a genuine usability design choice</h3>
+    <p>A full-featured interface (custom networks, tunable hyperparameters) for researchers who want control, and a deliberately separate <em>simple</em> interface — a single function call with reasonable defaults — specifically so new users can get a working result before learning to define custom networks or tune anything. Worth noting since it's the same "novice-friendly default path" goal <a href="effortless.html">NPE-PFN</a> pursues by a completely different route (borrowing a pretrained tabular model instead of shipping good defaults for a from-scratch training pipeline).</p>
+
+    <h3>Related software, per the paper's own account (Sec. 1.1)</h3>
+    <ul>
+      <li><strong>elfi</strong> — offers BOLFI (a Gaussian-process-based algorithm) plus classical ABC methods.</li>
+      <li><strong>carl</strong> — implements one specific calibrated-classifier likelihood-ratio algorithm.</li>
+      <li><strong>hypothesis</strong>, <strong>pydelfi</strong> — two other SBI packages, under development at time of writing.</li>
+      <li><strong>pyabc</strong>, <strong>ABCpy</strong> — packages offering a diversity of classical ABC algorithms specifically, not neural methods.</li>
+    </ul>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Builds on <a href="cranmer.html">cranmer.html</a>'s three-way surrogate taxonomy (learn the posterior, the likelihood, or the ratio) — this paper is one of the two libraries (with <a href="bayesflow1.html">BayesFlow</a>) that actually implements all three as installable, documented code.</p>
+
+    <h4>1. Why the "sequential" acronyms matter, and why getting their origin right matters too</h4>
+    <p>Each of the three families this library implements has a "sequential" refinement version, and it's genuinely useful to know that history exists — a first sequential posterior method had a real bug (probability could leak outside where it was supposed to live), and it took a specific, citable follow-up paper to fix it properly. What matters for how you read this whole field: a fast neural method being published doesn't mean it's already been fully debugged — that's a pattern worth watching for repeatedly, not a one-off historical curiosity.</p>
+
+    <h4>2. A library that hands you the parts, not a finished machine</h4>
+    <p>Where BayesFlow leans toward "here's a sensible default pipeline, customize if you need to," sbi leans the other way: pick your family (posterior, likelihood, or ratio), pick sequential or not, and the library gives you the pieces. That's not better or worse — it's a different bet about who's using it and how much they already know about their own problem.</p>
+
+    <h4>3. Two doors into the same house</h4>
+    <p>A brand-new user can call one function with sensible defaults and get a working result immediately — no need to understand summary networks or normalizing flows first. An experienced researcher can go in through the other door and control every architectural choice. Worth noticing as a genuinely deliberate design decision, not an accident: the same underlying machinery serves both audiences without forcing either to learn the other's workflow first.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>Worth explicitly re-checking the amortization-vs-sequential framing from <a href="bayesflow2.html">bayesflow2.html</a>'s own self-comparison once this page is fresh: BayesFlow 2 describes itself as amortization-first while crediting sbi with "native support for non-amortized methods such as sequential and multi-round posterior, likelihood, and ratio estimation." This paper's own description (three sequential families, by name, as a headline feature) matches that framing closely — a rare case in this library of two papers' mutual self-descriptions actually lining up cleanly.</p>
     <!-- DISCUSSION:END -->
   </section>
 
