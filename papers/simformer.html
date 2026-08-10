@@ -42,14 +42,62 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>The core move: one network for every conditional, not one fixed target</h3>
+    <p>Every SBI method so far in this library picks one fixed target: NPE learns p(θ|x), NLE learns p(x|θ), NRE learns a ratio. Simformer instead trains a single probabilistic diffusion model on the <strong>full joint</strong> p(θ,x), such that <em>any</em> conditional of that joint — the posterior, the likelihood, or an arbitrary conditional like p(θ₁,θ₂|x₁) or p(x₂|θ₁,x₁) — can be sampled from the same trained network afterward. This directly generalizes <a href="zammit.html">JANA</a> (which jointly amortizes exactly two targets, posterior and likelihood) to <em>every</em> conditional at once.</p>
+
+    <h3>How: tokenize everything, randomly mask during training</h3>
+    <p>Every variable — each parameter, each data point — becomes a token carrying an identifier, its value, and a binary condition-state (observed/conditioned vs. latent/to-be-inferred). During training, this condition-state is resampled at every iteration: sometimes the mask corresponds to the posterior task, sometimes the likelihood task, sometimes two randomly sampled subsets. Training on many different random splits is exactly what makes sampling from <em>arbitrary</em> conditionals possible at inference time — the network never specializes to one fixed input/output split.</p>
+
+    <h3>The score-based diffusion machinery</h3>
+    <p>A denoising score-matching objective trains a transformer to predict the score (gradient of the log-density) of the (partially) noised joint at each diffusion timestep; sampling runs the corresponding reverse-time SDE. Because the target output is a <em>score</em>, not a fixed-size vector, the same trained model naturally accommodates variable numbers of tokens — which is exactly what makes irregular/unstructured/missing/function-valued data tractable, discussed below.</p>
+
+    <h3>Attention masks encode domain knowledge directly — Cranmer's "open the black box" idea, implemented</h3>
+    <p>When the simulator's true conditional-dependency structure is known (e.g. a Markov chain, where each state genuinely only depends on the previous one), that structure can be encoded directly as the transformer's attention mask — a concrete, six-years-later implementation of the "stop treating the simulator as a black box" theme from <a href="cranmer.html">Cranmer et al.</a> The paper backs this with real graph theory (Appendix A1): it proves precisely which conditional-independence guarantees an attention mask can and cannot enforce, and at what diffusion noise levels — a genuinely rigorous treatment, not just "add domain knowledge and hope."</p>
+
+    <h3>Capabilities with no analog in NPE/NLE/NRE</h3>
+    <ul>
+      <li><strong>Function-valued (infinite-dimensional) parameters</strong> — e.g. a time-varying contact rate in an epidemiological model, not just a fixed-size parameter vector. Handled via subsampling random points from the underlying continuous index set during training (justified via the Kolmogorov Extension Theorem), rather than a fixed discretization grid.</li>
+      <li><strong>Unstructured, irregularly-sampled data</strong> — e.g. predator and prey population counts measured at different, non-aligned time points in a Lotka-Volterra ecological model. No summary statistics needed; inference runs directly on the raw irregular series.</li>
+      <li><strong>Missing data</strong> — handled by the same tokenization scheme natively, with no special-casing required.</li>
+      <li><strong>Guided diffusion for interval/constraint conditioning</strong> — condition not just on exact observed values but on an <em>interval</em> or arbitrary constraint (demonstrated by finding energy-efficient parameter configurations in a Hodgkin-Huxley neuron model — "keep metabolic cost below a threshold" — while remaining consistent with observed voltage traces). Genuinely new relative to standard NPE/NLE/NRE, which condition on point observations only.</li>
+    </ul>
+
+    <h3>Benchmark results, with real numbers</h3>
+    <p>Across all four standard benchmark tasks (Gaussian Linear, Gaussian Mixture, Two Moons, SLCP), Simformer outperformed NPE on posterior accuracy (C2ST) — even using a dense, uninformed attention mask — with one exception (the Gaussian Linear task specifically at 10,000 simulations). Encoding known dependency structure into the attention mask improved accuracy further, especially on tasks with sparser true structure. <strong>Averaged across all tasks, Simformer needed about 10× fewer simulations than NPE</strong> to reach comparable accuracy — a genuine sample-efficiency win, not merely a flexibility one. On the SIRD epidemiological case study, the inferred posterior for the time-varying contact rate sensibly <em>widens</em> exactly during periods when infections approach zero — there's genuinely nothing in the data at that point to inform the estimate, and the model correctly says so instead of overclaiming confidence.</p>
+
+    <h3>Honest, stated limitations</h3>
+    <ul>
+      <li><strong>Slower sampling than NPE</strong> — normalizing flows (NPE's usual backbone) sample in one shot; Simformer must solve a reverse SDE, though as few as ~50 steps sufficed for accurate results in their experiments (a few seconds for 10,000 samples — still far faster than MCMC).</li>
+      <li><strong>Quadratic scaling with token count</strong> — transformer attention cost grows quadratically with the number of parameters/data points, a real constraint for very high-dimensional problems, partially mitigated by sparse attention when independence structure is known.</li>
+      <li><strong>Estimating all conditionals ≈ estimating the joint</strong> — in problems with few parameters but very high-dimensional data (images, long time series), learning the full joint may genuinely be harder than targeting the posterior alone would be. (Simformer can still be queried for just the one conditional actually needed, rather than always computing everything.)</li>
+      <li><strong>Log-probability evaluation is more expensive</strong> than for normalizing-flow-based NPE/NLE — it requires solving the probability-flow ODE. Point estimation (MAP) and MCMC integration remain practical, though, since the score function itself supports gradient ascent and Langevin-MCMC directly, without needing a full log-probability evaluation.</li>
+    </ul>
+
+    <h3>Explicit positioning: five prior papers, each solving one piece, generalized here</h3>
+    <p>The paper's own related-work section is unusually direct about what's genuinely new: prior work separately handled function-valued parameters (but only with fixed discretizations), irregularly-sampled time series (but via ABC, not amortized), missing data (via data augmentation and RNNs), and joint posterior+likelihood estimation (<a href="zammit.html">JANA</a> and Glöckler et al. 2022 — but as two separate learned networks, not one). Simformer's contribution is explicitly framed as unifying all of these into one architecture rather than introducing any single one of them for the first time.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Builds on <a href="cranmer.html">cranmer.html</a>'s three-way split (posterior/likelihood/ratio) and the "mining gold"/opening-the-black-box theme from that same paper — Simformer is best understood as what happens when you take that six-year-old idea and rebuild it with modern diffusion models and transformers.</p>
+
+    <h4>1. Why pick one target when you can train on everything at once?</h4>
+    <p>Every earlier method in this library commits early: "I will learn the posterior" or "I will learn the likelihood." That's a real cost if your questions change later — say you first want "given this data, what are the parameters," then later want "given these parameters and part of the data, what's the rest of the data." Normally that means training two separate networks. Simformer's trick is to randomly hide different pieces of information during training, over and over, so the network never specializes to one fixed question — it learns to answer <em>any</em> fill-in-the-blank question about the whole system, and you pick which blanks to fill in after the fact.</p>
+
+    <h4>2. Handling "I don't have a clean, complete spreadsheet"</h4>
+    <p>A lot of earlier methods quietly assume your data always arrives in the same tidy shape — same number of measurements, same timing, nothing missing. Real ecological or medical data rarely cooperates: predator counts and prey counts get measured on different days, some sensors fail, some measurements are just never taken. Because Simformer treats each individual data point as its own token rather than forcing everything into one fixed-size vector, gaps and irregular timing aren't special cases needing extra machinery — they're just tokens that happen to be missing from a given input.</p>
+
+    <h4>3. "Find me a good answer within these limits," not just "match this exact number"</h4>
+    <p>Normally, conditioning means "given exactly this observed value, what follows?" Guided diffusion adds a genuinely new kind of question: "given that I need the answer to satisfy some constraint — like keeping energy use under a threshold — steer me toward configurations that do." That's closer to how an engineer actually poses a design question (find settings that work and are efficient) than how a scientist poses a pure inference question (given this data, what's the parameter) — a real expansion of what "conditioning" can mean.</p>
+
+    <h4>4. A correctly humble model, not just an accurate one</h4>
+    <p>The SIRD epidemic example is worth remembering as a small but important sanity check: when there's essentially no disease spreading, there's genuinely very little information in the data about how contagious the disease currently is, and a trustworthy model should say "I'm not sure" rather than confidently guessing. Simformer's uncertainty widens exactly there — a concrete, visible instance of well-calibrated behavior, not just a claim about it.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>Worth returning to this paper's rigorous graph-theoretic appendix (A1) once <a href="diffusion.html">the diffusion-models-in-SBI tutorial review</a> (next in this reading order) is covered — that paper will likely give the general vocabulary (score functions, SDEs, noise schedules) this paper applies to one specific, structurally rich problem. Also worth re-reading the explicit "five prior papers, one piece each" positioning once <a href="dopfn.html">Do-PFN</a> and <a href="causalpfn.html">CausalPFN</a> (Module 04) are covered — both of those are, in a sense, a sixth and seventh specialization of "condition on a particular subset of a joint distribution," this time targeting specifically interventional queries rather than the general arbitrary-conditional capability Simformer builds.</p>
     <!-- DISCUSSION:END -->
   </section>
 
