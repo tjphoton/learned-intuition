@@ -42,14 +42,49 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>EGO moves from deterministic simulators to noisy machine-learning runs</h3>
+    <p>Snoek, Larochelle, and Adams treat hyperparameter tuning as expensive black-box optimization. Each function evaluation means training a model and measuring validation performance. Their system keeps the GP and Expected Improvement structure from <a href="ego.html">EGO</a>, but adds observation noise, uncertain GP hyperparameters, variable run times, and parallel workers. These changes turn a classical engineering method into a usable machine-learning service.</p>
+
+    <h3>The GP prior is a practical choice with real consequences</h3>
+    <p>The paper argues against the squared-exponential kernel as a default because it assumes an unrealistically smooth objective. Spearmint uses an automatic-relevance-determination Matérn 5/2 kernel, whose sample functions are twice differentiable. The learned length scales also reveal which search dimensions matter. The experiments show that a poor covariance choice can materially weaken the optimizer.</p>
+
+    <h3>Integrate over GP hyperparameters instead of plugging in one estimate</h3>
+    <p>With few observations, the GP length scales, amplitude, mean, and noise level remain uncertain. A single marginal-likelihood optimum can create a brittle acquisition surface. The authors use slice sampling to draw from their posterior and average EI across those draws. On Branin-Hoo, this fully Bayesian GP EI method finds the minimum in fewer than half as many evaluations as the Tree Parzen Algorithm and performs better than optimizing the GP hyperparameters to a point estimate.</p>
+
+    <h3>Optimize improvement per second when evaluations have different costs</h3>
+    <p>A larger neural network or stricter convergence tolerance may take much longer to train. Spearmint fits a second GP to log duration and scores candidates by expected improvement per expected second. The authors note that the same idea can price money, reagents, or another limited resource. This changes the operational objective from "fewest experiments" to "best result soonest."</p>
+
+    <h3>Pending experiments are handled with fantasies</h3>
+    <p>When several workers run in parallel, their outcomes are not known yet. Reusing ordinary EI would risk launching duplicate experiments. Spearmint samples possible outcomes for the pending points from the GP, computes the acquisition under each imagined completion, and averages. This Monte Carlo construction, now often called fantasizing, lets asynchronous workers keep taking distinct, informed jobs.</p>
+
+    <h3>The applications establish hyperparameter optimization as a serious use case</h3>
+    <p>The paper tests logistic regression on MNIST, online LDA, max-margin min-entropy models, and a nine-parameter convolutional network on CIFAR-10. Parallel BO finds strong online-LDA settings with a fraction of the original 288-run grid. On CIFAR-10, the best GP EI MCMC configuration reaches 14.98% test error, compared with the human expert's 18% result. The gain came from non-obvious settings, including asymmetric weight penalties and a learning rate two orders of magnitude smaller.</p>
+
+    <h3>What the paper does not solve</h3>
+    <p>The cost model assumes duration and objective value are independent. EI per second can also prefer many cheap trials even when a slower experiment has greater long-term value. Fantasizing approximates a difficult multi-step decision with a one-step average. And the experiments use mostly continuous or gridded search spaces; later BO work handles conditional architectures and mixed variable types more directly.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>EGO asks which expensive simulation to run next. Spearmint applies the same logic to training machine-learning models, where runs are noisy, take unequal time, and often happen on several computers at once.</p>
+
+    <h4>1. The optimizer is uncertain about its own map</h4>
+    <p>A GP needs settings that control how smooth the unknown function is. Early in a search, there is too little evidence to know those settings precisely. Spearmint keeps several plausible maps alive and averages their recommendations. That makes the next choice less dependent on one fragile guess.</p>
+
+    <h4>2. A trial's value depends on when it finishes</h4>
+    <p>If two experiments offer similar expected gains but one takes ten minutes and the other takes ten hours, the faster one may be the better immediate choice. Modeling duration makes this trade-off explicit. It also shows that "sample efficiency" and "wall-clock efficiency" are different goals.</p>
+
+    <h4>3. Parallel search requires reasoning about missing results</h4>
+    <p>While one model trains, its result cannot update the GP. Spearmint imagines several plausible outcomes, asks what it would do after each one, and averages those answers. The imagined values are temporary. Their purpose is to keep the next worker from blindly repeating work already in flight.</p>
+
+    <h4>4. Automation can beat expert defaults without replacing expertise</h4>
+    <p>The CIFAR-10 result is the memorable headline, but the system still needs a human to define the model, search space, validation measure, and budget. BO automates disciplined trial selection inside that frame. It does not decide whether the frame itself is sensible.</p>
+
+    <h3>Going deeper: the first bridge toward agentic optimization</h3>
+    <p>Spearmint still has a fixed loop and a fixed numeric search space. But it already manages resources, parallel work, uncertain outcomes, and an external training process. Those are ingredients the later agent papers will inherit. The key difference is control: here the acquisition function decides every next action; in Part III, an LLM begins proposing variables, interpreting feedback, and sometimes changing the experiment itself.</p>
     <!-- DISCUSSION:END -->
   </section>
 
