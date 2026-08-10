@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>From ABC to Amortization — Learned Intuition</title>
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="assets/theme.css">
+<link rel="stylesheet" href="assets/history.css">
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" type="button">
+  <svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
+  <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="display:none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></svg>
+</button>
+
+<div class="wrap">
+  <a class="backlink" href="index.html#part1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 8H3M7 4L3 8l4 4"/></svg>Back to study plan — Part I</a>
+
+  <header class="hist-header">
+    <span class="pillar-tag sbi">Part I — Recognize</span>
+    <h1>From ABC to Amortization</h1>
+    <p class="hist-dek">Twenty-seven papers, one throughline: instead of computing a posterior from scratch every time, train a network on millions of simulated examples until it learns to <em>recognize</em> the answer. This is the story of how that idea went from a niche physics technique to a validated foundation-model recipe — and where, specifically, it still hasn't been applied.</p>
+    <div class="hist-stats">
+      <div class="stat"><div class="n tnum">27</div><div class="l">papers</div></div>
+      <div class="stat"><div class="n tnum">2018–2026</div><div class="l">span</div></div>
+      <div class="stat"><div class="n tnum">6</div><div class="l">modules</div></div>
+      <div class="stat"><div class="n tnum">1</div><div class="l">confirmed gap</div></div>
+    </div>
+  </header>
+
+  <section class="act">
+    <span class="act-eyebrow">Before this story starts</span>
+    <h2>The classical baseline</h2>
+    <span class="act-span">pre-2020</span>
+    <div class="act-body">
+      <p>Every paper in this pillar is answering a question that's much older than any of them: you have a mechanistic simulator — a program that turns parameters into data — and no way to write down the likelihood it implicitly defines. The classical answer was <strong>Approximate Bayesian Computation</strong>: draw parameters from a prior, run the simulator, keep the draws whose output looks close enough to what you actually observed. It works, but it has a structural weak spot — "close enough" needs hand-built summary statistics, and as problems get more complex, almost every draw gets thrown away. The other classical answer, density estimation on simulated data, is faster to reuse but suffers the same curse of dimensionality on the front end. Both approaches served science for decades. Both are the reason every paper below exists.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act I — 2020 to 2025</span>
+    <h2>A recipe discovered three times</h2>
+    <span class="act-span"><a href="papers/cranmer.html">Cranmer, Brehmer &amp; Louppe</a> · <a href="papers/zammit.html">Zammit-Mangion, Sainsbury-Dale &amp; Huser</a></span>
+    <div class="act-body">
+      <p><a href="papers/cranmer.html">Cranmer et al.'s 2020 PNAS survey</a> is where this pillar's vocabulary gets set. It names the real problem precisely — the likelihood p(x|θ) = ∫dz p(x,z|θ) is an integral over every possible path through a simulator's latent variables, and for a real simulator that integral is uncomputable — and states, in so many words, that the field's usual name for this, "likelihood-free inference," is "a bit of a misnomer": nothing is missing, it's just intractable. The paper's real contribution is a taxonomy: instead of one fixed algorithm, train a neural surrogate for the posterior, the likelihood, or the likelihood ratio — three different targets, later standardized across the field as NPE, NLE, and NRE, though (a detail worth getting right, since an early pass through this project attributed those exact acronyms to this paper in error) Cranmer's own text never uses them. It describes all three in prose, tied to a figure.</p>
+      <p>Five years later, <a href="papers/zammit.html">Zammit-Mangion, Sainsbury-Dale &amp; Huser</a> gives the whole enterprise a decision-theoretic foundation: amortization isn't just an engineering trick, it's licensed by a 1973 theorem (Brown &amp; Purves) that a single rule, trained to minimize average loss across a huge batch of simulated situations, actually converges to the optimal rule for <em>every</em> situation. That paper's own worked example produces the single sharpest number in this act: a variational posterior using the mathematically <strong>exact</strong> likelihood still only achieves <strong>77.7% coverage</strong> against a 90% target — proof, in one benchmark, that using the "real" math somewhere in your pipeline doesn't protect the final answer's confidence from being wrong.</p>
+      <div class="pull"><p>"Likelihood-free inference" served as "a point of convergence for what were previously disparate communities, and a new lingua franca has emerged." — Cranmer et al., 2020</p></div>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act II — 2022 to 2026</span>
+    <h2>Proving the mechanism at scale</h2>
+    <span class="act-span">tabular foundation models</span>
+    <div class="act-body">
+      <p>The taxonomy is one thing; proof it actually works at scale is another. That proof runs through a single lineage. <a href="papers/tcdbi.html">Müller et al.'s "Transformers Can Do Bayesian Inference"</a> (2022) is the origin point — Prior-Data Fitted Networks, trained via a genuinely proven convergence guarantee, not just an empirical hope. Its own stated future work names one specific next step: "using our model for the amortized simulation-based inference setting." Everything in this act is that sentence, fulfilled.</p>
+      <ul class="timeline">
+        <li><span class="t-year">2025 · Nature</span><span class="t-title"><a href="papers/tabpfn.html">TabPFN</a></span><span class="t-note">The paradigm-proof: 2.8 seconds beats an ensemble of tuned gradient-boosted trees given 4 hours — a 5,140× speedup for classification.</span></li>
+        <li><span class="t-year">2025</span><span class="t-title"><a href="papers/tabpfn25.html">TabPFN-2.5</a></span><span class="t-note">5× more rows, 4× more features; beats a 4-hour-tuned ensemble that already includes TabPFN v2 as one of its own members.</span></li>
+        <li><span class="t-year">2026</span><span class="t-title"><a href="papers/tabpfn3.html">TabPFN-3</a></span><span class="t-note">A genuine architectural pivot (row-embedding compression, not cell-level attention) to reach 1,000,000 training rows; adds an LLM-style "Thinking mode."</span></li>
+        <li><span class="t-year">2026</span><span class="t-title"><a href="papers/tabpfnts.html">TabPFN-TS</a></span><span class="t-note">A frozen TabPFN-v2, never fine-tuned, reframes forecasting as tabular regression — and is honest that it structurally cannot extrapolate a trend.</span></li>
+        <li><span class="t-year">2026</span><span class="t-title"><a href="papers/tabiclv2.html">TabICLv2</a></span><span class="t-note">A rival, fully open lineage (INRIA) — beats the closed RealTabPFN-2.5 with zero tuning, at roughly a tenth of its predecessor's training cost.</span></li>
+        <li><span class="t-year">2025 · NeurIPS</span><span class="t-title"><a href="papers/effortless.html">Effortless…Bayesian Inference via TFMs</a></span><span class="t-note">Closes the loop explicitly: a frozen, off-the-shelf TabPFN used autoregressively as a general SBI engine — <a href="papers/tcdbi.html">tcdbi's</a> own future work, realized.</span></li>
+      </ul>
+      <p>The pattern across this whole act is oddly consistent: a new release ships, benchmarks well, and its own authors name a specific weakness in the text — then the next release fixes exactly that weakness and names a new one. TabPFN's Methods section admits it can be slower than CatBoost per single prediction; TabPFN-2.5 answers with a distillation engine. TabPFN-2.5 struggles on high-frequency oscillations; TabPFN-3 says so, out loud, and fixes it. This isn't a single triumphant leap — it's a field debugging itself in public, one honestly-reported gap at a time.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act III — 2023 to 2026</span>
+    <h2>Building the toolkit</h2>
+    <span class="act-span">metabeta · BayesFlow · sbi · Simformer · diffusion</span>
+    <div class="act-body">
+      <p>Alongside the tabular-model lineage, a second thread turns the taxonomy from Act I into installable software and hand-built demonstrations of what it can actually model. <a href="papers/metabeta.html">metabeta</a> is the dress rehearsal for hierarchical regression — local and global summary networks, matching HMC's accuracy at 0.01 seconds versus 37 — and its own honest limitation section states plainly that it's a collection of separately trained models, one per problem size, not yet one universal network. <a href="papers/mixture.html">Kucharský &amp; Bürkner's mixture-models paper</a> takes the same local/global pattern and applies it to a genuinely different kind of unknown — not "how much" but "which group" — extending amortized inference to categorical latents for the first time, and reports a specific, mechanistically-explained failure mode (negative R² on transition-probability recovery when hidden states are poorly separated) rather than hiding it.</p>
+      <p><a href="papers/bayesflow1.html">BayesFlow</a> and <a href="papers/sbi.html">sbi</a> are the two competing software libraries this whole reading order leans on, and their evolution tracks the field's own growing sophistication: both start as focused algorithm libraries and both grow, within about a year of each other, into full workflow toolkits with diagnostics and visualization built in — <a href="papers/bayesflow2.html">BayesFlow 2</a> adding native support for diffusion, flow matching, and consistency models; <a href="papers/sbireloaded.html">sbi reloaded</a> adding simulation-based calibration and local C2ST as first-class features, and quietly noting that a third competing library, Lampe, was discontinued in 2024 in favor of sbi — real evidence of the ecosystem consolidating, not just self-promotion.</p>
+      <p><a href="papers/simformer.html">Simformer</a> is the act's most structurally ambitious paper: one diffusion-based transformer, trained via randomized masking, that can sample <em>any</em> conditional of a joint distribution — not just the posterior or the likelihood, but arbitrary subsets, missing data, irregularly-sampled time series, and function-valued parameters — needing roughly 10× fewer simulations than standard NPE on average. And <a href="papers/diffusion.html">the diffusion-models tutorial review</a> gives the whole act its formal vocabulary in one place: the same score-based math covers NPE, NLE, and joint estimation, additive score composition lets independently-trained pieces of a hierarchical model be summed together at inference time — the general mathematical version of what metabeta and the mixture paper each built by hand — and its own empirical finding is concrete: the variance-preserving noise schedule "is superior in most SBI tasks" tested.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act IV — 2018 to 2026</span>
+    <h2>The reckoning: does any of this deserve trust?</h2>
+    <span class="act-span">SBC · the Trust Crisis · differentiable coverage · self-consistency</span>
+    <div class="act-body">
+      <p>Every fast method in Acts II and III makes a silent promise: that its stated uncertainty is honest. This act is where that promise gets tested, and largely fails, and then gets repaired. <a href="papers/sbc.html">Talts, Betancourt, Simpson, Vehtari &amp; Gelman (2018)</a> is the foundational diagnostic — not a neural-SBI paper at all, but a general Bayesian-workflow tool the entire field adopts — proving that rank statistics of a true parameter within its own recovered posterior must be exactly uniform, with a specific, memorable visual grammar: a ∪-shaped histogram means <strong>overconfidence</strong> (the truth keeps landing outside the claimed range), an ∩-shape means <strong>conservatism</strong> (the model hedges wider than it needs to).</p>
+      <div class="pull"><p>All benchmarked algorithms — amortized and non-amortized alike — "may produce non-conservative posterior approximations. This pathology tends to be accentuated with small simulation budgets." — Hermans et al., 2022</p></div>
+      <p><a href="papers/trustcrisis.html">Hermans et al.'s "Trust Crisis"</a> (2022) applies that diagnostic across seven benchmarks — including real particle-physics, astrophysics, and gravitational-wave problems — at a cost of 200 to 2,800 CPU-days per benchmark, and finds every method tested fails somewhere. Its most counterintuitive finding: amortized methods are actually <em>more</em> conservative than sequential ones, because sequential training compounds an early overconfident guess into a worse one at each subsequent round. Its actionable fix — deep ensembles, not bagging — is the direct ancestor of two later papers: <a href="papers/coverage.html">Falkiewicz et al.</a> turn the same diagnostic into a differentiable training-time regularizer, penalizing only <em>under</em>-coverage to encode Hermans' own asymmetric-cost argument directly into the loss; <a href="papers/selfconsistency.html">Mishra, Habermann, Schmitt, Radev &amp; Bürkner</a> attack a different failure entirely — not "is the posterior calibrated on data like its training set" but "does it stay trustworthy on data unlike its training set at all" — with a provably no-trade-off semi-supervised loss that needs as few as 4 unlabeled real observations to recover from a domain shift that breaks plain NPE outright.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act V — 2025 to 2026</span>
+    <h2>Into causal territory</h2>
+    <span class="act-span"><a href="papers/dopfn.html">Do-PFN</a> · <a href="papers/causalpfn.html">CausalPFN</a> · <a href="papers/tsprior.html">Interventional Time Series Priors</a></span>
+    <div class="act-body">
+      <p>Two concurrent, rival papers extend the PFN recipe from "predict" to "predict under intervention" — and disagree with each other, in print. <a href="papers/dopfn.html">Do-PFN</a> trains on paired observational and interventional data from the same sampled structural causal model, targets the full interventional distribution, and proves (via Doob's martingale convergence theorem) that it converges to the truth up to genuine unidentifiability — its uncertainty correctly <em>inflates</em> under a hidden confounder rather than confidently guessing wrong. <a href="papers/causalpfn.html">CausalPFN</a>, published weeks apart, targets a narrower quantity (the expected effect, not the full distribution), builds its training prior by retrofitting real tabular data rather than sampling causal graphs from scratch, and states in its own related-work section that Do-PFN "lacks a procedure to guarantee the identifiability of the prior data" and underperforms CausalPFN empirically. Both claims are true, for different reasons: they're solving differently-scoped problems, and — a useful epilogue — <a href="papers/tabpfn25.html">TabPFN-2.5's own later report</a> found a plain TabPFN-2.5 wrapped in an old-fashioned statistical recipe beating CausalPFN on the same benchmark, which turns out to be a timeline story (a newer, stronger base model), not a refutation of either paper's premise.</p>
+      <p><a href="papers/tsprior.html">Interventional Time Series Priors</a> is this act's most honestly-scoped entry — a workshop paper, proof-of-concept GRU rather than a transformer, that fills a real gap (no existing benchmark provides paired interventional time-series data) and reports its own shuffled-intervention control test with a partial, not perfect, pass rate, stated directly rather than smoothed over.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act VI — 2017 to 2026</span>
+    <h2>The one gap nobody's closed</h2>
+    <span class="act-span"><a href="papers/jinmmm.html">Jin et al.</a> · <a href="papers/nnn.html">NNN</a> · <a href="papers/discretechoice.html">Amortized Discrete Choice</a></span>
+    <div class="act-body">
+      <p>This is where the pillar's abstract machinery meets a real, still-open commercial problem: Media Mix Modeling. <a href="papers/jinmmm.html">Jin et al.'s 2017 Google paper</a> is the incumbent — a flat, non-hierarchical Bayesian regression with adstock and Hill-curve saturation — and its own central, most honest finding is that at realistic sample sizes (a couple of years of one brand's weekly data), the fitted curves are <strong>substantially biased by the choice of prior</strong>, not the data, with relative bias up to −39.7% on one channel. Its own conclusion names the fix — pool data across brands or geographies for more informative priors — and points to two follow-up papers that build it. Neither is covered in this reading order, but the fix they describe is exactly what <a href="papers/metabeta.html">metabeta</a>, three modules earlier, demonstrates the amortized, neural version of.</p>
+      <p><a href="papers/nnn.html">NNN</a> (Google, 2025) is the direct, explicit foil: embeddings instead of scalar spend, an explicit Search-as-mediator pathway instead of a hand-specified adstock curve — and on real regional data, the incumbent MMM's test R² goes <strong>negative</strong> (−0.90, worse than predicting the mean) on genuinely out-of-time-period data, while NNN holds at 0.98. But NNN's own Section 13 is unusually candid about what it gives up to get there: "NNN provides neither uncertainty estimates of the model parameters nor the predictions" — the entire calibration apparatus of Act IV, currently absent. Its own verdict: "a complement rather than a replacement."</p>
+      <p><a href="papers/discretechoice.html">Huch &amp; Keane's amortized discrete-choice paper</a> closes the pillar on its most rigorous note — a proven universal approximation theorem, matched or better accuracy than the classical GHK simulator at a fraction of the cost, and a genuinely important finding buried in the numbers: the cheap, commonly-used GHK(10) setting <em>undercovers</em> at large sample sizes, the opposite of what practitioners might assume "more data" would fix.</p>
+      <div class="pull"><p>The tooling exists. The closest structural analog (metabeta) exists. NNN shows embeddings help and admits it has no uncertainty quantification. Nobody has combined amortized, portfolio-wide pooling with rich creative embeddings and built it for Media Mix Modeling specifically. That's still true as of this reading order.</p></div>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Where this leaves you</span>
+    <h2>Proven, half-proven, and empty</h2>
+    <div class="act-body">
+      <p>Read end to end, this pillar tells a three-part story with three different confidence levels. The basic paradigm — train on simulations, recognize instead of compute — is <strong>proven decisively</strong>: it holds up on real particle physics, real astrophysics, real gravitational-wave data, real econometric time series, and it now beats twenty years of gradient-boosted-tree dominance on tabular prediction outright. The causal extension is <strong>proven with real caveats</strong>: two rival architectures both converge to correct behavior under their own stated assumptions, and both are explicit about where those assumptions break. And the one domain this whole project originally set out to investigate — pooled, amortized Media Mix Modeling — is, after a careful reading of everything above, still <strong>empty</strong>. Not because the pieces don't exist. Because nobody has put them together yet.</p>
+    </div>
+  </section>
+
+  <nav class="hist-nav">
+    <a href="index.html#part1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M13 8H3M7 4L3 8l4 4"/></svg>Back to the study plan</a>
+    <a href="decide-history.html">Part II history: Decide — Bayesian Optimization<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+  </nav>
+
+  <footer class="hist-footer">
+    <a href="index.html">Learned Intuition</a> · Simulation-Based Inference, Bayesian Optimization &amp; Agentic Research
+  </footer>
+</div>
+
+<script src="assets/theme.js"></script>
+</body>
+</html>
