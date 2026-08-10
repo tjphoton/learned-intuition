@@ -42,14 +42,54 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>A short software paper, not a methods paper</h3>
+    <p>This is a JOSS-style "Statement of Need," five pages total — it doesn't introduce new inference theory (that's Radev, Mertens et al. 2020 and the other cited method papers), it packages existing amortized-inference building blocks into a usable, documented library. Read it as "what does this tool do and why would I reach for it," not as a technical contribution to read closely for novel math.</p>
+
+    <h3>The pipeline, precisely (Fig. 1)</h3>
+    <p>Simulator + Prior (each with optional <em>context</em> variables — varying numbers of observations, design matrices, positional encodings) define a generative model. A <strong>Configurator</strong> sits between the raw model outputs and the neural networks, handling transformations (normalization, dtype conversion) that aren't part of the statistical model but matter for training stability. Conditioning variables are split into two kinds: <strong>summary conditions</strong> — complex inputs (e.g. raw simulated datasets) routed through a summary network into a compressed embedding — and <strong>direct conditions</strong> — simple inputs (e.g. a single scalar) that bypass the summary network entirely and feed straight into the inference network. That split is a genuinely useful practical detail: not every conditioning variable needs compression, and forcing simple ones through a summary network would just add unnecessary overhead.</p>
+
+    <h3>Four capabilities, not just one</h3>
+    <ul>
+      <li><strong>Amortized posterior estimation</strong> — a summary network plus a posterior network solve the inverse problem for any current or future data compatible with the simulator.</li>
+      <li><strong>Amortized likelihood estimation</strong> — a summary network plus a likelihood network solve the forward problem instead: emulate the simulator itself for any parameter configuration, or interface with external probabilistic programs.</li>
+      <li><strong>Amortized model comparison</strong> — train a neural classifier to identify the best model among several competing candidates, or combine the posterior and likelihood networks to compute Bayesian evidence and out-of-sample predictive performance.</li>
+      <li><strong>Model misspecification detection</strong> — check whether the resulting posteriors remain faithful approximations even when the simulator doesn't perfectly represent reality.</li>
+    </ul>
+    <p>Posterior and likelihood networks can be trained standalone or jointly ("Approximate Joint" in Fig. 1) — joint training additionally enables marginal likelihood estimation, posterior predictive estimation, and joint simulation-based calibration.</p>
+
+    <h3>Explicit positioning against the other software in this module</h3>
+    <ul>
+      <li><strong>ABC packages</strong> (PyMC, pyABC, ELFI) — the right tool when non-amortized inference isn't actually a bottleneck: a single dataset, access to parallel compute, or no need for repeated re-fits.</li>
+      <li><strong><a href="sbi.html">sbi</a></strong> — the paper's own framing: "BayesFlow and sbi can be viewed as complementary toolkits: sbi focuses on a variety of different approximators for standard modeling scenarios, while BayesFlow focuses on amortized workflows with user-friendly default settings and optional customization." Both implement NPE and its sequential variants — the difference is breadth-of-approximators (sbi) versus opinionated defaults for amortized workflows (BayesFlow).</li>
+      <li><strong>swyft</strong> — a physics/astronomy-focused library built around one specific technique, Truncated Marginal Neural Ratio Estimation, improving on MCMC-based ABC by learning the likelihood-to-evidence ratio directly.</li>
+      <li><strong>LAMPE</strong> — implements a subset of sbi's posterior-estimation methods but exposes every component (architectures, optimizers) for maximal customization.</li>
+    </ul>
+
+    <h3>Built on TensorFlow — worth flagging for the sequence comparison</h3>
+    <p>This version is built on TensorFlow (with TensorFlow Probability for flexible priors), giving off-the-shelf GPU/TPU support. Worth remembering once <a href="bayesflow2.html">BayesFlow 2</a> is read next — its move to a Keras-3-based, multi-backend design (JAX/PyTorch/TensorFlow) is a genuine architectural departure from this single-backend original, not just a version bump.</p>
+
+    <h3>Real-world reach, not just benchmark demonstrations</h3>
+    <p>The paper lists actual deployed uses across epidemiology, cognitive modeling, computational psychiatry, neuroscience, particle physics, agent-based econometrics, seismic imaging, structural health monitoring, aerospace, wind turbine design, and MEMS testing — genuine evidence of traction beyond academic benchmark tasks by the time of publication.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Builds on <a href="cranmer.html">cranmer.html</a>'s three-way surrogate taxonomy (posterior / likelihood / likelihood-ratio) and <a href="zammit.html">zammit.html</a>'s permutation-invariant summary networks. This paper is where those ideas get packaged into something you'd actually install and use.</p>
+
+    <h4>1. A toolkit, not a technique</h4>
+    <p>Every other paper so far in this module introduced a new mathematical idea. This one is different in kind: it's the software that lets you actually build one of those ideas without writing the underlying neural network code yourself. Think of the difference between a paper describing how an engine works and the car manufacturer that packages that engine into something you can drive — same underlying physics, very different kind of contribution.</p>
+
+    <h4>2. Why "direct" vs. "summary" conditions matters in practice</h4>
+    <p>Not everything you condition a model on needs the same treatment. If you're trying to estimate a posterior from an entire simulated dataset, that dataset needs compressing first — that's a summary condition. But if you're also conditioning on something simple, like "how many observations were in this dataset" (just one number), running that single number through an entire compression network would be pure overhead. Letting simple things skip the compression step entirely is a small design choice, but it's exactly the kind of practical detail that separates a usable library from an elegant but impractical algorithm.</p>
+
+    <h4>3. Four jobs, one shared engine</h4>
+    <p>It's worth noticing that "estimate the posterior" and "estimate the likelihood" are close to mirror images of each other — both are "compress the data, then map that summary to a target distribution," just aimed at different targets. Once you have both, a few more things fall out almost for free: comparing which of several candidate models fits best, and checking whether your fitted model's confidence is actually trustworthy. This library doesn't require four separate tools — it's the same underlying machinery, reused four ways.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>Worth returning to this paper's "Related Software" section once <a href="sbi.html">sbi</a> and its later "reloaded" version are both read — this is the earliest of the three software papers in this module to explicitly state how it sees itself positioned relative to sbi, swyft, and LAMPE, which is useful context for judging whether that self-positioning still holds up two years later.</p>
     <!-- DISCUSSION:END -->
   </section>
 
