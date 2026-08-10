@@ -42,14 +42,54 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>A general harness for computational campaigns</h3>
+    <p>AlphaLab takes a dataset and a natural-language objective, then builds domain instructions, explores the data and literature, constructs an evaluator, and runs up to 50 GPU experiments. The same harness is tested on language-model pretraining, CUDA kernels, and traffic forecasting. Humans define the dataset and objective; the reported campaigns then run without intervention.</p>
+
+    <h3>The system writes its own domain adapter</h3>
+    <p>Phase 0 creates eleven files that define metrics, entry points, role prompts, and domain knowledge. Phase 1 spends hours profiling data, reading prior work, testing basic choices, and producing human and machine-readable reports. This moves important setup work into the agent rather than requiring a custom template for every domain.</p>
+
+    <h3>Evaluation gets an adversarial construction phase</h3>
+    <p>A Builder writes data loading, splits, metrics, and orchestration. A fresh Critic audits for leakage, lookahead, and metric mistakes, while a Tester writes executable checks. The loop continues until tests pass or a cap is reached. This is a strong design choice, although all three roles use related frontier models and cannot guarantee that shared blind spots are found.</p>
+
+    <h3>The playbook is experimental memory</h3>
+    <p>A Strategist reads the leaderboard and debriefs, proposes or cancels work, and updates a compressed playbook of successes and failures. Workers implement, execute, analyze, or repair one experiment each. The playbook enters every later context, so findings such as “do not attempt convolution kernels” prevent repeated waste. Removing it worsened the pretraining score by 2.5%.</p>
+
+    <h3>Pretraining results depend strongly on the model</h3>
+    <p>Under a 20-minute training limit for models below 100 million parameters, Opus 4.6 reached 0.7578 validation bits per byte, Sonnet 0.8686, and GPT-5.2 0.9697. The GPT-5.2 greedy loop scored 1.020 and its one-shot baseline 1.248. Opus was 22% better than the full GPT-5.2 campaign, while the table implies a larger gain over the one-shot baseline. GPT-5.1-mini failed to implement the metric correctly in 33 attempts.</p>
+
+    <h3>Variance is large enough to change comparisons</h3>
+    <p>Five otherwise identical GPT-5.2 campaigns ranged from 0.964 to 1.020 bits per byte. That spread is about the same as the gap between the best full-system run and the greedy baseline. Every replication matched or beat the greedy result, but the authors correctly describe single-run comparisons as indicative rather than conclusive.</p>
+
+    <h3>Kernel and forecasting results test different strengths</h3>
+    <p>GPT-5.2 produced 110 correct kernels in 119 attempts and averaged a 4.40-fold speedup over torch.compile; the largest individual gain was 91.4-fold. Cross-system comparisons use different hardware and baselines, so they are approximate. On traffic forecasting, Opus improved weekly seasonal-naive RMSE by 25% and GPT-5.2 by 23%, mainly by finding and tuning published model families rather than inventing new architectures.</p>
+
+    <h3>The harness is capable but operationally fragile</h3>
+    <p>Campaigns take roughly 12 to 48 hours on four H100 GPUs and cost $150 to $200 in model calls, excluding GPU cost. GPT-5.2 had a 38% pretraining-experiment failure rate from API changes. A Supervisor can patch shared domain instructions when failures spike, but late harness errors still consumed budgets. The code runs with shell and internet access and has no sandboxing.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. The agent builds the laboratory before using it</h4>
+    <p>Earlier search systems assumed a human-written evaluator. AlphaLab asks agents to inspect the data and construct that evaluator themselves. A separate critic and test writer then challenge it. This increases autonomy, but it also moves a potential error upstream, where one bad metric can corrupt every later result.</p>
+
+    <h4>2. Research becomes campaign management</h4>
+    <p>The Strategist does not edit each experiment directly. It decides which ideas deserve limited GPU slots, drops weak families, and shifts from exploration toward refinement as the budget shrinks. Workers carry out bounded tasks in parallel. The structure resembles a lab manager coordinating specialists.</p>
+
+    <h4>3. Memory is useful when it stores negative evidence</h4>
+    <p>The playbook records failed approaches as well as good recipes. This directly addresses a problem raised by the autonomy critique: published success alone is not enough to guide the next experiment. Here the failure knowledge is local, explicit, and immediately reusable within the campaign.</p>
+
+    <h4>4. Different models provide different search priors</h4>
+    <p>GPT-5.2 was stronger on CUDA, while Opus was stronger on pretraining and slightly stronger on traffic. They also converged on different architectures. This is evidence for complementary engineering behavior, though three domains and mostly single campaigns are not enough to establish general epistemic diversity.</p>
+
+    <h3>Connection to the evolutionary-search sequence</h3>
+    <p>FunSearch assumes an exact human evaluator. AlphaEvolve expands the editable code and feedback. ADRS explains how systems researchers build reliable environments. AlphaLab takes another step by making agents build much of the environment and preserve experimental knowledge. Each step gains autonomy while adding new verification and operational risks.</p>
+
+    <h3>The key takeaway</h3>
+    <p>AlphaLab is best viewed as an autonomous experimental operator for measurable computational work. It can research, implement, test, and remember across a sustained campaign. The paper itself still favors human-AI teams because people choose what matters, audit claims, and decide when a metric-driven campaign has produced insight rather than only a better number.</p>
     <!-- DISCUSSION:END -->
   </section>
 
