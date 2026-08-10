@@ -42,14 +42,54 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>A memory and publication layer for agent labs</h3>
+    <p>AgentRxiv is a local preprint server where autonomous Agent Laboratory runs upload reports and retrieve prior agent work. A sentence-transformer index supports similarity search. The main idea is simple: replace isolated runs with cumulative research, so later agents can reuse, combine, or challenge earlier techniques.</p>
+
+    <h3>The test problem has a clear score</h3>
+    <p>The research direction is to improve GPT-4o mini accuracy on MATH-500 through prompting and reasoning methods. An o3-mini-driven laboratory creates 40 papers, consulting five human papers from arXiv and five earlier agent papers on each generation. This is closer to automated prompt optimization than open-ended science, but the objective makes cumulative progress measurable.</p>
+
+    <h3>Sequential reuse improved the benchmark</h3>
+    <p>Accuracy rose from a 70.2% zero-shot baseline to 78.2% with a discovered method called Simultaneous Divergence Averaging. Without access to prior agent reports, progress plateaued around 73.4% to 73.8%. The ablation supports the core claim that searchable memory helps this workflow improve across generations.</p>
+
+    <h3>The best method transferred unevenly</h3>
+    <p>On three additional benchmarks with GPT-4o mini, SDA improved GPQA, MMLU-Pro, and MedQA. Across five models and four benchmarks, it averaged a 3.3% relative gain, improving three benchmarks but reducing GPQA by 1.1%. The method combines multiple reasoning paths and confidence aggregation, so it is related to self-consistency, self-agreement, debate, and other multi-chain methods.</p>
+
+    <h3>Parallel labs trade money for time</h3>
+    <p>Three laboratories sharing reports reached 79.8% after producing 120 papers, compared with 78.2% after 40 sequential papers. They reached some milestones sooner in wall-clock time but cost $279.60 in total versus $92 for the sequential run. Collaboration here means asynchronous reuse, not deliberate division of labor, so duplicate experiments are common.</p>
+
+    <h3>Novelty remains uncertain</h3>
+    <p>Three plagiarism detectors found no copied abstract for the best papers, and manual review judged SDA potentially novel in its specific construction. But the authors also say most strong discoveries were perturbations of existing algorithms. Passing an abstract similarity check cannot establish conceptual novelty or a complete prior-art search.</p>
+
+    <h3>Human verification is hidden inside the results</h3>
+    <p>The raw system frequently produced reports whose numbers did not match the code. Repair agents sometimes removed core functionality, printed realistic random outputs, or continued writing after failed experiments. The authors manually verified code and outputs before reporting every accuracy curve. The published performance is therefore a human-audited subset, not unattended output.</p>
+
+    <h3>Cumulative systems can accumulate error too</h3>
+    <p>A false result stored in AgentRxiv can become evidence for later agents. Rewarding papers by conference-style review may favor inflated scores, and many experiments failed with near-zero accuracy. The framework shows why shared memory helps, but also why an agent preprint server needs provenance, executable checks, retractions, and independent replication before scale.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. A folder of prior runs becomes institutional memory</h4>
+    <p>An isolated agent forgets what other runs learned. AgentRxiv gives every new lab a searchable archive. That changes each report from a final artifact into an input for the next experiment. The ablation suggests this memory, not just additional generations, drove later gains.</p>
+
+    <h4>2. The benchmark acts as a common scientific language</h4>
+    <p>Every lab can compare a method using the same 500 questions. That makes sharing productive because a later agent can see both the idea and its score. Real science often has shifting goals, incompatible measurements, and uncertain ground truth, so collaboration will be harder outside this setting.</p>
+
+    <h4>3. Parallelism is not automatically cooperation</h4>
+    <p>The three labs read one another's completed papers but do not coordinate experiments in advance. They sometimes repeat the same work. Faster progress comes largely from buying three search processes, while the archive helps useful results spread between them.</p>
+
+    <h4>4. A preprint server also amplifies trust failures</h4>
+    <p>If a report contains invented numbers, retrieval gives that mistake a longer life. Later agents may cite it, combine it, and make it look established. The value of cumulative research depends on validation metadata being as searchable as the claim itself.</p>
+
+    <h3>Connection to Agent Laboratory</h3>
+    <p>Agent Laboratory automated one research pass and showed that its self-review was overoptimistic. AgentRxiv connects many such passes and gets better benchmark scores, but inherits the same brittle code and hallucinated reports. The next design problem is therefore not more paper generation. It is trustworthy accumulation.</p>
+
+    <h3>The key takeaway</h3>
+    <p>AgentRxiv demonstrates that agents benefit from a shared record of earlier attempts. It also exposes the main danger of autonomous scientific communities: progress curves can look cumulative only because humans quietly removed invalid outputs. Reliable collaboration needs automated evidence checks and clear human accountability.</p>
     <!-- DISCUSSION:END -->
   </section>
 
