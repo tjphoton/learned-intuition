@@ -42,14 +42,54 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>A research assistant built around a human idea</h3>
+    <p>Agent Laboratory takes a research question and optional notes from a person, then produces a literature review, experiment code, results interpretation, and research report. Its goal is not autonomous ideation. It is to help a researcher test more of their own ideas while choosing how often to intervene.</p>
+
+    <h3>Three phases, several specialized roles</h3>
+    <p>A PhD agent searches arXiv and curates papers. PhD and Postdoc agents agree on an experimental plan, a machine-learning engineer prepares data and runs the iterative mle-solver, and the pair interprets results. The paper-solver then drafts and revises a structured report using simulated conference reviews.</p>
+
+    <h3>Autonomous and co-pilot modes test different products</h3>
+    <p>Autonomous mode proceeds after the initial idea without feedback. Co-pilot mode pauses after each subtask so a researcher can request another pass and give high-level corrections. This makes Agent Laboratory closer to an execution partner than the AI Scientist systems, which chose their own project within a topic.</p>
+
+    <h3>Human ratings expose the quality ceiling</h3>
+    <p>Ten PhD students reviewed 15 autonomous papers across five questions and three model backends. Experimental quality averaged 2.6 out of 5 for GPT-4o, 3.2 for o1-mini, and 2.9 for o1-preview. Usefulness was higher, from 4.0 to 4.4. NeurIPS-style overall scores ranged from 3.5 to 4.0 out of 10, below the cited 5.9 average for accepted papers.</p>
+
+    <h3>Self-review was badly overoptimistic</h3>
+    <p>Automated reviewers gave the generated work an average 6.1 out of 10. Human reviewers gave it 3.8, a 2.3-point gap, and the paper reports that automated scores did not predict human scores. This is direct evidence against using an agent's simulated peer review as the main quality gate for its own research.</p>
+
+    <h3>Human feedback helps, but alignment is hard</h3>
+    <p>Externally reviewed co-pilot papers averaged 4.38 out of 10, about 0.58 above autonomous papers but still 1.45 below the cited NeurIPS acceptance average. Improvements centered on quality, soundness, clarity, and presentation, not significance. Participants rated usability 4.0 out of 5, yet sometimes found it hard to guide the agents toward their exact vision.</p>
+
+    <h3>The engineering component is the strongest benchmark</h3>
+    <p>On ten selected MLE-Bench challenges, mle-solver submitted a valid solution to every task within two hours, earned four medals, and exceeded median human performance on six. Comparisons exclude invalid submissions from competing systems, so the result should be read with care. Still, it provides objective task evidence beyond judging generated prose.</p>
+
+    <h3>Cheap reports are not finished papers</h3>
+    <p>A GPT-4o run averaged $2.33 and about 19 minutes, while stronger backends cost more and ran longer. The authors say the report is meant to explain what the agent accomplished so a person can scale the experiment and write the final paper. Hallucinated experimental details, failed zero-accuracy runs, brittle arXiv search, and unsafe host commands remain known failure modes.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. The person owns the question</h4>
+    <p>This design draws a useful boundary. The researcher decides what is worth studying. Agents collect background, build a first implementation, run a bounded experiment, and summarize it. That division preserves human judgment at the point where novelty and importance are hardest to automate.</p>
+
+    <h4>2. A pipeline can make weak work look complete</h4>
+    <p>Every output has the familiar sections of a paper, which creates a sense of finish. Human reviewers saw much lower quality than the automated reviewers did. The structured report is valuable as a work log, but its form should not be confused with validation.</p>
+
+    <h4>3. Co-piloting shifts rather than removes effort</h4>
+    <p>Checkpoints let a researcher correct missing papers, unwanted methods, or poor interpretations before errors spread. But the user must inspect intermediate work and translate their intent into feedback. The benefit depends on whether that review costs less than doing the task directly.</p>
+
+    <h4>4. Coding has clearer feedback than science</h4>
+    <p>MLE-Bench provides data, a score, and a valid-submission test. An agent can iterate against those signals. Open-ended research has no equally clean objective for significance or truth, which helps explain why engineering results are stronger than paper ratings.</p>
+
+    <h3>Connection to the AI Scientist papers</h3>
+    <p>Agent Laboratory makes a more modest and defensible product claim. It assists with a human idea and treats the generated paper as a report. Its evaluations also correct a weakness in the prior work by putting generated papers in front of human readers and showing how far automated review can drift.</p>
+
+    <h3>The key takeaway</h3>
+    <p>The useful unit is not an autonomous paper. It is a cheap, inspectable first research pass. Agent Laboratory can reduce routine work, especially implementation, but the study's own ratings show that human direction and independent evaluation remain essential.</p>
     <!-- DISCUSSION:END -->
   </section>
 
