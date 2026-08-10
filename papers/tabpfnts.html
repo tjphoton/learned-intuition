@@ -42,14 +42,59 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>Correction to the byline: four authors, not two</h3>
+    <p>The card meta lists "Hoo, Müller" (matching index.html's abbreviated convention); the actual paper is Hoo, Müller, Salinas &amp; Hutter — Salinas (ELLIS Institute Tübingen) and Hutter (Prior Labs) are full co-authors, not omitted for a reason stated in the text. Noting this since it's a factual detail, not editing the shared header without being asked.</p>
+
+    <h3>The core idea: forecasting <em>is</em> tabular regression, if you featurize time right</h3>
+    <p>No new model, no fine-tuning, no time-series-specific pretraining at all — this paper takes the frozen, off-the-shelf <a href="tabpfn.html">TabPFN-v2</a> regression checkpoint exactly as released and reformulates forecasting as an ordinary tabular regression problem. Each timestamp becomes one row: its features encode <em>when</em> it is, its target is the observed value. The historical window becomes the training table (X_train, y_train); every future timestamp in the forecast horizon becomes a test row with known features (time) and unknown target (value) — TabPFN-v2 is simply asked to predict all of them, <strong>in a single forward pass</strong>, non-autoregressively. This is a genuinely different shape than most time-series foundation models (Chronos, TimesFM, Toto), which are built around autoregressive or seq2seq sequence architectures and generate the horizon step by step or in learned decoder blocks.</p>
+
+    <h3>The temporal featurization, precisely</h3>
+    <ul>
+      <li><strong>Running index</strong> — the raw integer position of each timestep. This is what gives the model any sense of global progression at all.</li>
+      <li><strong>Calendar features</strong> — 8 cyclic components (second-of-minute through month-of-year), each encoded as a (sin, cos) pair at its natural period, plus a non-cyclic year value — 17 dimensions total.</li>
+      <li><strong>Automatic seasonal features</strong> — detrend the series, window and zero-pad it, take an FFT, and keep the top-k spectral peaks as detected periodicities (not hand-specified) — each encoded as its own (sin, cos) pair. This catches domain-specific cycles (lunar, non-Gregorian) that fixed calendar features would miss.</li>
+      <li><strong>Time-varying covariates</strong> — only ones known in advance for future timestamps (e.g. holidays), not unknowable ones (e.g. weather) — folded in as ordinary additional feature columns, no architectural change needed.</li>
+    </ul>
+    <p>Deliberately excluded: lagged/autoregressive features (moving averages, lag terms) — these would require iterative, step-by-step prediction, which conflicts directly with predicting the entire horizon in one non-autoregressive pass.</p>
+
+    <h3>Results: competitive univariate, state-of-the-art with covariates — from an 11M-parameter model</h3>
+    <p>On GIFT-Eval (23 datasets, 144,000+ series, 97 tasks): TabPFN-TS ranks close behind the leading dedicated time-series foundation models (TiRex, Toto-1.0, Moirai-2) and matches larger ones (TimesFM-2.0, Chronos-Bolt) — despite being two-plus orders of magnitude smaller and never having seen a single real or synthetic <em>time series</em> during pretraining, only synthetic tabular data. On fev-bench's 28 covariate-informed tasks: TabPFN-TS achieves the <strong>strongest result of any model tested</strong>, including Toto-1.0 (which is specifically designed for multivariate/covariate settings) — because it's the only baseline that treats covariates as first-class predictive features rather than bolting them on.</p>
+
+    <h3>A clean, rigorous mechanistic finding: why sin(t) alone isn't enough</h3>
+    <p>Using sin(t) as the only periodic feature, the model reconstructs odd harmonics but fails on even ones. The reason is precise, not empirical guesswork: t ↦ sin(t) is <strong>not injective</strong> — multiple distinct time points map to the same feature value, making local interpolation ambiguous at those points. Adding cos(t) makes the joint embedding injective on the unit circle, uniquely identifying phase, and the model then reconstructs harmonics accurately across a wide frequency range (with expected degradation at very high frequencies, where adjacent phases become hard to distinguish at finite sampling resolution). The authors' own summary: TabPFN-TS "behaves like a learned kernel or nearest-neighbor regressor, interpolating in feature space" — its forecasting ability is fundamentally geometric interpolation in a cleverly engineered feature space, not sequential reasoning.</p>
+
+    <h3>Two honest, structural limitations</h3>
+    <ul>
+      <li><strong>Cannot extrapolate trends.</strong> When future values fall outside the range of the observed history — a sustained linear or exponential trend — TabPFN-TS's predictions flatten out near the last observed value instead of continuing the trajectory. This isn't a featurization bug fixable with better engineering: it's inherited directly from how TabPFN-v2 was pretrained. Every synthetic pretraining task partitions one dataset into context and query drawn from the <em>same</em> distribution, so query targets almost always fall within the range of context targets — the backbone was optimized to interpolate, never to extrapolate, and this paper's reformulation can't undo that.</li>
+      <li><strong>Slower inference.</strong> Under equal hardware, TabPFN-TS needs roughly <strong>30× more inference time</strong> than Chronos-Bolt or TimesFM-2.0. In tabular settings, one forward pass predicts an entire dataset; in this reformulation, one time series <em>is</em> one dataset, so forecasting hundreds or thousands of series means hundreds or thousands of separate forward passes — compounded by TabPFN-v2's O(L²) full-attention cost in sequence length, which dedicated time-series models mitigate through patching or lightweight decoders this method doesn't use.</li>
+    </ul>
+
+    <h3>Backbone choice matters — evidence for the "synthetic prior breadth" philosophy</h3>
+    <p>Swapping TabPFN-v2 for TabDPT (another tabular foundation model, but one pretrained on real-world tabular data rather than a broad synthetic SCM prior) produces meaningfully worse forecasts — comparable only to a small Chronos-Bolt variant. The authors' hypothesis: the sheer functional diversity of TabPFN-v2's synthetic pretraining tasks induces inductive biases that transfer to time series better than exposure to real tabular data does. A concrete piece of evidence that the specific <em>synthetic, broad-prior</em> design choice running through this whole module — not "any tabular foundation model" — is what's doing the work.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Read <a href="tabpfn.html">tabpfn.html</a> first. Nothing about TabPFN itself changes here — this paper's whole trick is realizing you can make a spreadsheet <em>out of</em> a time series, and then just hand that spreadsheet to the existing model.</p>
+
+    <h4>1. Turning a timeline into a table</h4>
+    <p>A time series is normally "a sequence of numbers, one per moment." This paper reframes each moment as its own row in a spreadsheet: the columns describe <em>when</em> that moment is (what day, what hour, how far into the whole timeline, which repeating cycles it's part of), and the one column you're trying to fill in is the value at that moment. Your past data becomes the "answer key" rows; every future moment you want to predict becomes a row with the "when" columns already known but the value column blank. Predicting the future is then just: fill in the blanks — literally the same operation TabPFN already does for any tabular dataset, no changes needed.</p>
+
+    <h4>2. Why you need both sin(t) and cos(t), not just one</h4>
+    <p>Here's a clean, small piece of math worth actually sitting with. If you only tell the model "it's a quarter of the way through a cycle" (sin(t) alone), that same number also describes a different point three-quarters of the way through the same cycle — sin() repeats itself, so two genuinely different moments can look identical to the model. Add "and here's the cosine too," and suddenly every point on the cycle has a unique fingerprint (think of it as a clock: knowing only the vertical position of the minute hand doesn't tell you if it's 15 or 45 minutes past the hour, but knowing both its vertical AND horizontal position pins it down exactly). This one small change is the entire reason the model can correctly reconstruct some repeating patterns and not others.</p>
+
+    <h4>3. Great at "the shape repeats," bad at "the trend continues"</h4>
+    <p>The model is excellent at noise and repeating patterns — it correctly recognizes "this looks like the wiggly pattern I've seen dozens of times already in this same dataset" and predicts accordingly, with well-calibrated confidence. But hand it a value climbing steadily upward past anything it's seen in the historical window, and it basically shrugs and predicts something close to the last few values it saw — it will not confidently continue the climb. This isn't a bug that better time-features would fix; it's baked into how the underlying model was trained in the first place (tcdbi's and tabpfn.html's training recipe never once asks the network to guess a value bigger than anything in its fake training context, so it never learns that skill). Worth remembering as a genuine limitation, not paper-generated hand-wringing: this is is why the honest "Limitation" section here is worth reading directly rather than skipping past.</p>
+
+    <h4>4. Slow, on purpose, as a trade-off — not a bug</h4>
+    <p>Purpose-built time-series models are fast partly because they're built to process many time series together, efficiently, in one batch. This method treats each individual time series as its own separate "dataset," so forecasting a thousand time series means running the model a thousand separate times. That's a real cost (roughly 30× slower here), but it's the direct price of the simplicity that makes this approach work at all — no retraining, no time-series-specific architecture, just an existing general-purpose model doing one job it was never specifically built for.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p><a href="tabpfn3.html">TabPFN-3</a>'s technical report (already covered, earlier than this in our reading but later chronologically) mentions a "TabPFN-TS-3" checkpoint ranking 2nd on the fev-bench benchmark — that's a newer version of exactly this idea, built on TabPFN-3's own native temporal/dynamic-SCM prior rather than bolted onto a frozen TabPFN-v2 via feature engineering. Worth comparing the two approaches directly once both are fresh: this paper achieves its result through clever featurization of a frozen model; TabPFN-3's approach bakes temporal structure into the pretraining prior itself. Different strategies for the same goal, and a good test of which one actually wins.</p>
+    <p>The backbone-swap ablation (TabPFN-v2 vs. TabDPT) is worth remembering as real evidence, not just a plausible-sounding story, for why this whole module treats the specific choice of a broad synthetic SCM prior as load-bearing — "any pretrained tabular model would probably work about as well" turns out to be false, at least once tested directly.</p>
     <!-- DISCUSSION:END -->
   </section>
 
