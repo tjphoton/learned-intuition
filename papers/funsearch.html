@@ -42,14 +42,51 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>Separate creative proposals from exact judgment</h3>
+    <p>FunSearch pairs a code-generating language model with a deterministic evaluator. The model proposes small programs. Invalid or slow programs are discarded, and valid ones receive an objective score. High-scoring programs return to later prompts. Hallucinated explanations do not matter if the code fails the test.</p>
+
+    <h3>Search the rule, not the full answer</h3>
+    <p>Humans supply an evaluator, an initial program, and usually a skeleton that isolates one critical function. FunSearch evolves that function, such as a priority rule inside a greedy construction. A short program can represent a solution containing hundreds of thousands of objects, so program search gives the process a strong bias toward compressed, structured answers.</p>
+
+    <h3>Evolution preserves more than one line of descent</h3>
+    <p>A database holds valid programs in separate islands. Prompts contain two sampled programs ordered by score, which lets the model infer a direction of improvement. Poor islands are periodically replaced from successful ones. Fifteen model samplers and 150 CPU evaluators run asynchronously, and the reported work sampled on the order of one million programs.</p>
+
+    <h3>The cap-set result is exactly verifiable</h3>
+    <p>For the cap-set problem over vectors modulo three, FunSearch found a set of size 512 in dimension eight, improving the previous 496. It also discovered admissible-set constructions that improved the asymptotic lower bound on cap-set capacity from 2.2180 to 2.2202, the largest such improvement in twenty years according to the paper. The upper bound remains much higher at 2.756.</p>
+
+    <h3>Readable code enabled a human mathematical step</h3>
+    <p>Researchers inspected a discovered priority function and noticed a symmetry across coordinate groups. They then restricted the next search to symmetric admissible sets, which allowed larger dimensions and produced the best bound. This is a concrete human-machine loop: search found a pattern, people named it, and that interpretation changed the search space.</p>
+
+    <h3>The bin-packing result tests transfer</h3>
+    <p>FunSearch evolved an online packing heuristic from best fit. On OR-Library tests it used fewer excess bins than first fit and best fit, despite training only on generated instances with the smallest test size. On a 100,000-item Weibull setting, it came within 0.03% of an offline lower bound. The discovered rule avoids leaving tiny gaps unless a fit is very tight.</p>
+
+    <h3>This method needs a special kind of problem</h3>
+    <p>FunSearch works when candidates can be executed cheaply, scored with rich feedback, and expressed through a useful skeleton. A binary proof checker gives too little guidance, and many natural-science questions lack a trustworthy scalar objective. Humans still define the problem, evaluator, representation, and computational budget.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. The language model is a mutation engine</h4>
+    <p>The paper does not rely on the model knowing the mathematics deeply. It relies on the model producing varied, mostly syntactic code with occasional useful changes. The evaluator supplies the rigor, and evolution turns rare improvements into future context.</p>
+
+    <h4>2. The skeleton concentrates creativity</h4>
+    <p>Asking the model to rebuild an entire solver wastes samples on boilerplate and creates more failure points. A human-designed skeleton fixes the known structure and exposes the uncertain rule. This limits autonomy but makes discovery tractable.</p>
+
+    <h4>3. Compression can reveal structure</h4>
+    <p>A raw cap set is a long list. A program that generates it must exploit regularity. That regularity can be read by a mathematician, as happened with the symmetry insight. The representation therefore supports both scale and explanation.</p>
+
+    <h4>4. Exact evaluators change the trust problem</h4>
+    <p>Unlike an automated paper reviewer, the cap-set checker can determine whether a proposed set satisfies the definition. This sharply limits reward hacking in the core result. Generalization is still a concern for learned heuristics such as bin packing, so held-out distributions remain important.</p>
+
+    <h3>Connection to the autonomy critique</h3>
+    <p>FunSearch is strongest precisely where the critique said current AI works best: people state the problem, provide a computable objective, and verify every candidate. It does not select a scientific question or manage ambiguous physical evidence. Its narrowness is a source of reliability, not a defect to hide.</p>
+
+    <h3>The key takeaway</h3>
+    <p>A language model becomes scientifically useful when embedded in a search loop with an unforgiving external verifier. The discovery comes from the whole system: human representation choices, model-generated variation, evolutionary selection, exact checking, and expert interpretation.</p>
     <!-- DISCUSSION:END -->
   </section>
 
