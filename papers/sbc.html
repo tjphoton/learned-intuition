@@ -42,14 +42,62 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>Important context: this is a general Bayesian-workflow paper, not a neural-SBI paper</h3>
+    <p>Every example in this paper validates <em>classical</em> Bayesian computation — MCMC (Stan/HMC), ADVI (variational inference), and INLA — not amortized neural posterior estimators. It predates the amortized-inference wave covered elsewhere in this module. The reason it's cited constantly by <a href="cranmer.html">Cranmer</a>, <a href="zammit.html">Zammit-Mangion</a>, <a href="metabeta.html">metabeta</a>, and nearly every other paper here is that its self-consistency principle applies identically to <em>any</em> algorithm that produces posterior samples, amortized or not — the later papers adopt it, they don't reinvent it.</p>
+
+    <h3>The self-consistency identity underneath everything (Eq. 1)</h3>
+    <p>π(θ) = ∫∫ π(θ|ỹ) π(ỹ|θ̃) π(θ̃) dỹ dθ̃ — average the <em>exact</em> posterior over data generated from the full Bayesian joint distribution, and you recover exactly the prior, for <em>any</em> model. Any discrepancy between this "data-averaged posterior" and the actual prior indicates an error somewhere in the computation or model implementation. This holds regardless of the model's structure — it's what makes a single, generic diagnostic procedure possible at all.</p>
+
+    <h3>Why the obvious approach (Cook, Gelman &amp; Rubin, 2006) doesn't actually work</h3>
+    <p>The earlier method computed posterior CDF values of the true parameter and checked they were uniformly distributed — correct in theory, but broken in practice for MCMC: those CDF values only converge to true uniformity <em>asymptotically</em>, and finite MCMC samples introduce discretization and autocorrelation artifacts. The paper demonstrates this concretely and a little alarmingly: applying the Cook et al. method to <strong>Stan — an algorithm known to be highly accurate</strong> — on a simple linear regression produces a histogram with strong, obvious-looking deviations from uniformity (Fig. 1). A correctly implemented analysis gets flagged as broken. That's the specific bug SBC exists to fix.</p>
+
+    <h3>The fix: rank statistics, not CDF values — and a genuine proof, not an approximation</h3>
+    <p>Instead of a CDF value, compute the <strong>rank</strong> of the prior draw θ̃ relative to L posterior samples (how many of the L samples are smaller than θ̃). <strong>Theorem 1</strong> (proven rigorously in the paper's Appendix B) establishes that this rank statistic is <em>exactly</em> — not asymptotically — uniformly distributed over the integers [0, L], for any one-dimensional function of θ, under any joint distribution. That exactness, rather than an asymptotic approximation, is the real technical contribution. Algorithm 1: repeat N times — draw a prior sample, simulate data, draw L posterior samples, compute the rank, build a histogram. A 99% gray band (from the underlying Binomial(N, 1/(L+1)) distribution) marks expected sampling noise, so roughly 1 bin in 100 deviating outside the band is expected by chance alone, even under a perfectly calibrated algorithm.</p>
+
+    <h3>Reading the shape of the histogram — the precise mechanics, not just the shorthand</h3>
+    <p>This is the exact diagnostic vocabulary this whole library uses when it says a method is "overconfident" or "conservative" — worth getting the mechanism right, not just the label:</p>
+    <ul>
+      <li><strong>∪-shape (spikes at both edges)</strong> = <strong>underdispersed / overconfident</strong>. If the computed posterior is too narrow, the true value θ̃ often falls <em>outside</em> the tight cluster of posterior samples — landing at an extreme rank (very low or very high) more often than chance would predict. This is precisely the failure mode <a href="trustcrisis.html">Hermans et al.'s "Trust Crisis"</a> paper documents at scale across the SBI literature.</li>
+      <li><strong>∩-shape (bulge in the middle)</strong> = <strong>overdispersed / conservative</strong>. A too-wide posterior tends to straddle the true value comfortably, landing it near the <em>middle</em> of the sample rank more often than chance — the opposite failure direction, and the one <a href="metabeta.html">metabeta</a>'s own forward-KL training tends toward.</li>
+      <li><strong>Sloped/asymmetric histogram</strong> = <strong>directional bias</strong>. Ranks skewed toward low values indicate the computed posterior is systematically biased <em>high</em> relative to the truth (and vice versa) — a real, slightly counterintuitive but precisely derivable relationship (Figs. 6–7).</li>
+    </ul>
+
+    <h3>Four real demonstrated failures — each a distinct, concrete diagnostic story</h3>
+    <ul>
+      <li><strong>Misspecified prior</strong> — deliberately mismatching the simulation prior and the fitting prior produces the predicted clean ∪-shape.</li>
+      <li><strong>Biased MCMC on a known pathology</strong> — the 8-schools hierarchical model in its <em>centered</em> parameterization (a textbook case of funnel geometry that traps samplers) shows Stan's HMC/NUTS producing posterior samples for τ <strong>biased toward larger values</strong> than the true generating process — a real, known failure mode caught directly. The standard fix (non-centered parameterization) shows no bias once the chain is properly thinned.</li>
+      <li><strong>ADVI failing on a genuinely simple model</strong> — not a complicated hierarchical case: plain linear regression. SBC reveals ADVI's variational posterior <strong>drastically underestimates uncertainty</strong> for the slope parameter — while the identical model fit with HMC gives a clean, uniform histogram. Direct proof the miscalibration is the algorithm's fault, not the model's.</li>
+      <li><strong>INLA, subtly biased on a real spatial disease-mapping model</strong> (HIV prevalence across 400 regions in Kenya) — the plain histogram alone looked fine (too noisy at the affordable N=1,000 replications to catch a small effect), but pairing it with an <strong>ECDF-difference plot</strong> (subtracting the expected uniform CDF from the empirical one, Fig. 8/13) revealed a real, small, low-count-driven bias the histogram alone missed. A genuinely instructive case: it demonstrates both the diagnostic's power <em>and</em> a real limitation of the basic histogram version.</li>
+    </ul>
+
+    <h3>Practical guidance, stated directly</h3>
+    <p>SBC is expensive (N full posterior fits instead of one) but <em>embarrassingly parallel</em> — every case study in the paper ran in a few hours on a cluster. For MCMC specifically, uncorrected autocorrelation in posterior samples <strong>produces a spurious ∪-shape on its own</strong> — indistinguishable at a glance from genuine overconfidence — so the paper provides a thinning procedure (Algorithm 2, based on effective sample size) to remove this artifact before interpreting the histogram as a real calibration failure. Bin count guidance: keep N/B ≈ 20 (B = bins) as a expressiveness/variance trade-off.</p>
+
+    <h3>An explicit, important limitation — the same one Cranmer's paper flagged as unsolved</h3>
+    <p>SBC validates <em>computational correctness relative to the assumed model</em> only. It offers <strong>no guarantee that the posterior covers the truth for any single real observation</strong>, and it says nothing about whether the model itself is a good description of reality — that's a separate problem (model misspecification), requiring posterior predictive checks instead. This is precisely the gap <a href="cranmer.html">Cranmer et al.</a> named as unaddressed back in 2020: calibration diagnostics and misspecification detection are different problems, and SBC only ever solves the first one.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>This is the paper behind a phrase used loosely throughout this whole library — "well-calibrated" — finally given a precise, checkable meaning.</p>
+
+    <h4>1. A test that works on literally any method that gives you a posterior</h4>
+    <p>Here's the clever core idea, stripped of formulas: make up a fake "true" answer, generate fake data from it, run your inference method on that fake data, and see whether the method's output is consistent with the fake answer you started with — repeat this thousands of times and look at the pattern. If your method is trustworthy, doing this over and over should produce a specific, boring, flat pattern (a uniform histogram). Any interesting shape in that histogram — a dip, a bump, a lean — is a fingerprint of a specific kind of mistake.</p>
+
+    <h4>2. Why the first attempt at this test was itself broken</h4>
+    <p>There's something almost funny and very instructive about this paper's opening move: it takes the previous version of this exact test, runs it on Stan — a tool known to be extremely reliable — and shows the test itself cries wolf, flagging a correct answer as broken. That's a great lesson about validation tools in general: a diagnostic that gives false alarms on things known to be correct is worse than useless, it's actively misleading. The fix here wasn't "try harder," it was finding a subtly different way to measure the same idea (ranks instead of percentiles) that turns out to be mathematically exact instead of only approximately true.</p>
+
+    <h4>3. Reading the shape like a fingerprint, not just noticing "something's wrong"</h4>
+    <p>The really useful part of this method isn't just "detects a problem" — it's "tells you what kind of problem." A U-shaped result means your method is too sure of itself: the real answer keeps landing outside where the method predicted it would be. A dome/hill shape means the opposite: your method is too hesitant, hedging wider than it needs to. A lopsided, sloped result means your method has a directional bias, consistently guessing a bit high or a bit low. Three different failure modes, three visibly different pictures — that's what makes this test genuinely useful for debugging, not just for grading.</p>
+
+    <h4>4. A test that only checks one specific thing, on purpose</h4>
+    <p>It's worth being precise about what this test does NOT check: it never asks "is your model of the world actually correct." It only asks "given that your model and your simulator are what you say they are, did your computer correctly work out the math." A model can pass this test perfectly and still be a bad description of reality — those are two completely separate questions, and mixing them up is a common and important mistake to avoid.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>Worth treating the "∪-shape = overconfidence, ∩-shape = conservative" vocabulary from this paper as load-bearing for the rest of Module 03 — <a href="trustcrisis.html">Hermans et al.'s "Trust Crisis"</a> (next in this reading order) documents exactly the ∪-shape failure at scale across the SBI literature, and it's worth checking whether that paper uses this exact same visual language or a different one. Also worth remembering the INLA case study's lesson specifically: a clean-looking SBC histogram is not proof of correctness, only proof that no <em>large</em> problem was caught at the sample size actually run — small, real biases can hide in a too-noisy or too-coarse histogram, which is why the paper pairs it with the ECDF-difference technique for a more sensitive check.</p>
     <!-- DISCUSSION:END -->
   </section>
 
