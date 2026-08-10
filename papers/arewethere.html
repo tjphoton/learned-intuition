@@ -42,14 +42,46 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>The decisive test is whether feedback changes the next experiments</h3>
+    <p>Gupta, Hartford, and Liu evaluate LLM agents on five gene-perturbation and three molecular-property datasets. Their key diagnostic replaces real experimental feedback with randomly permuted outcomes. If the agent performs in-context experimental design, destroying the action-outcome relationship should hurt. It does not.</p>
+
+    <h3>The tested agents mostly act from priors, not posterior updates</h3>
+    <p>BioDiscoveryAgent and its randomized-feedback variant perform similarly across Llama, Qwen, and Claude backends, and the corrupted version sometimes does slightly better. The model can name plausible genes or molecules from pretraining, but its next batch is largely insensitive to which earlier candidates actually succeeded.</p>
+
+    <h3>Classical uncertainty-aware methods remain stronger</h3>
+    <p>Linear UCB and GP optimization use the same candidate embeddings available to the agents and consistently beat the basic LLM approach. This controls for representation quality: the advantage comes from updating a statistical model and balancing exploration against exploitation, not merely from having a good embedding.</p>
+
+    <h3>LLMNN separates semantic seeding from local expansion</h3>
+    <p>LLM-guided Nearest Neighbour asks the LLM for a small set of seed candidates, then fills the experimental batch with unexplored nearest neighbors in a domain embedding space. A memory prevents repeated candidates. The LLM supplies a global semantic prior; nearest-neighbor expansion supplies a simple, feedback-linked exploitation mechanism.</p>
+
+    <h3>The simple hybrid is strong but not universally best</h3>
+    <p>LLMNN substantially beats BioDiscoveryAgent on gene tasks and, with larger models, often matches or exceeds classical baselines. In molecular tasks, classical methods still win several comparisons. Removing the LLM and choosing random centroids can cut hit counts by more than half, so the semantic seeds matter, but they are not a substitute for disciplined sequential learning.</p>
+
+    <h3>The evaluation measures discovery, not one global optimum</h3>
+    <p>Each run has five rounds and fixed batch sizes. Utility is the cumulative number of candidates above a hit threshold. This is closer to active search, as described in <a href="garnett.html">Garnett's textbook</a>, than standard single-optimum BO. The distinction explains why coverage of several promising neighborhoods can be useful.</p>
+
+    <h3>The negative result is scoped carefully</h3>
+    <p>The study tests off-the-shelf instruction-tuned models without external tool use or fine-tuning, on offline tabular proxies for laboratory experiments. It does not show that every LLM-agent design ignores feedback. It shows that plausible natural-language reflections are not evidence of posterior updating and that randomized-feedback ablations should be a standard check.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>An agent may write a convincing reflection about the last experiment while making nearly the same choice it would have made after random feedback. This paper tests behavior instead of trusting the explanation.</p>
+
+    <h4>1. Break the feedback channel on purpose</h4>
+    <p>Randomly pairing past candidates with outcomes removes the information needed to learn. When performance stays the same, the agent was not using that information effectively. This is a stronger diagnostic than reading its stated plan.</p>
+
+    <h4>2. Prior knowledge is still useful</h4>
+    <p>The negative result does not make the LLM worthless. Its first guesses can identify meaningful regions. LLMNN keeps that strength and gives a simpler algorithm responsibility for systematic local search and memory.</p>
+
+    <h4>3. Hybrid should mean distinct responsibilities</h4>
+    <p>A useful hybrid does not add an LLM everywhere. It assigns semantic proposal to the LLM and statistical updating to a component that demonstrably reacts to data. That split is easier to test and debug.</p>
+
+    <h3>Going deeper: a benchmark rule for the rest of Part III</h3>
+    <p>For every claimed research agent, ask what happens under shuffled scores, stale observations, removed tools, or renamed candidates. If the trajectory barely changes, the system may be replaying a prior rather than learning from experiments. This paper supplies one of the cleanest falsification tests in the reading list.</p>
     <!-- DISCUSSION:END -->
   </section>
 
