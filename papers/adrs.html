@@ -42,14 +42,54 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>Systems research as a verified search problem</h3>
+    <p>The paper names a pattern rather than one new algorithm: AI-Driven Research for Systems, or ADRS. A model proposes code for a scheduler, load balancer, cache policy, or other isolated component. A simulator or real system checks correctness and performance. Evolution keeps useful variants and repeats.</p>
+
+    <h3>The scope is deliberately narrower than an AI scientist</h3>
+    <p>ADRS automates solution design and evaluation, which a survey of PhD students estimated at about 40% of systems-research time. Humans still choose the problem, build the evaluator and workloads, interpret the result, and write the paper. This narrow scope is what makes empirical feedback dependable enough to guide search.</p>
+
+    <h3>Eleven case studies show broad practical reach</h3>
+    <p>Students applied the open-source OpenEvolve framework to networking, databases, distributed systems, and machine-learning infrastructure. Results include 7% average and 16.7% per-trace savings beyond a published spot-instance policy, an 18.5% cheaper model-placement solution, faster LLM-SQL reordering at comparable cache hit rate, and improvements in transaction scheduling, telemetry repair, sparse attention, and multi-agent workflows.</p>
+
+    <h3>The detailed cases reveal how gains arise</h3>
+    <p>For Mixture-of-Experts load balancing, evolution replaced Python loops with tensor operations and reorganized experts more efficiently. For offline transaction scheduling, it combined a statistics-based initial order, greedy insertion, pair swaps, and random restarts. The system often rediscovers familiar algorithmic ideas, then finds overlooked combinations or implementation refinements.</p>
+
+    <h3>The headline numbers need careful reading</h3>
+    <p>The text reports a five-fold MoE rebalancing speedup, while the summary table says two-fold against the internal implementation. The LLM-SQL result appears as three-fold in prose and 3.9-fold in the table. Some comparisons are against published state of the art, others against strong baselines, and several tasks are unpublished work. The students used different models and settings without systematic ablations, so results are useful case studies rather than a controlled benchmark.</p>
+
+    <h3>The evaluator is the real research infrastructure</h3>
+    <p>A good evaluator must preserve correctness, cover diverse workloads, resist hard-coding, and return useful feedback quickly. The paper recommends adversarial tests and multiple signals for correctness, speed, and robustness. Cascades can move candidates from a cheap cost model through simulators and emulators to the real system.</p>
+
+    <h3>Guidance can help or constrain discovery</h3>
+    <p>A clean minimal baseline may encourage larger conceptual changes, while a near-optimal implementation can trap search in micro-optimizations. Hints are most useful after evolution stalls. Reasoning and non-reasoning models can balance novel exploration with cheap refinement, but more than two models sometimes produced conflicting mutations.</p>
+
+    <h3>Current fit is local, fast, and verifiable</h3>
+    <p>ADRS works best when a small code region controls performance and hundreds of evaluations are affordable. It is weaker for cross-component protocols, hard semantic equivalence, expensive distributed training, weak simulators, or problems an established optimizer already solves well. Reward hacking, workload overfitting, local optima, and shallow API substitutions remain common.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. Systems code provides its own laboratory</h4>
+    <p>A scheduling idea can be inserted into a simulator, run on historical traces, and compared with a baseline. That makes systems performance unusually friendly to evolutionary agents. The environment can reject invalid schedules and quantify cost or latency without asking a model for an opinion.</p>
+
+    <h4>2. The verifier defines what evolution means</h4>
+    <p>If the score rewards only speed, an agent may violate fairness or correctness. If traces are narrow, it may memorize them. If a library shortcut is allowed, it may replace an algorithm rather than improve it. Writing the evaluator is therefore part of the scientific hypothesis, not routine plumbing.</p>
+
+    <h4>3. A simulator is useful only where it matches reality</h4>
+    <p>Fast feedback supports hundreds of trials, but every simplification creates a simulation-to-system gap. Held-out traces help. A stronger design promotes finalists through progressively more realistic tests and, when possible, validates the best one on the live system.</p>
+
+    <h4>4. Human work moves upstream</h4>
+    <p>The agent can search implementations long after a person would stop. The researcher must spend more care on choosing a meaningful objective, exposing the right code boundary, and recognizing the idea inside the final program. Those tasks become more important as code search gets cheaper.</p>
+
+    <h3>Connection to AlphaEvolve</h3>
+    <p>AlphaEvolve demonstrated a proprietary, mature version of evolutionary code discovery. ADRS generalizes the pattern for systems researchers and tests an open implementation across student projects. Its best-practice section is valuable because it documents the practical work hidden behind a successful run: prompts, baselines, traces, constraints, and evaluators.</p>
+
+    <h3>The key takeaway</h3>
+    <p>Computer systems may be one of the first research fields where verified algorithm search becomes routine. But the paper's evidence supports a partnership model: humans construct the question and its reality check; agents explore the implementation space at a scale people cannot.</p>
     <!-- DISCUSSION:END -->
   </section>
 
