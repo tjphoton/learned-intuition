@@ -42,14 +42,57 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>This is the reference book for the Decide pillar</h3>
+    <p>Garnett's 2023 book is a self-contained treatment, not one more acquisition-function paper. It starts with Gaussian processes, derives BO from Bayesian decision theory, covers computation and regret, then rebuilds major extensions from the same principles. Its central promise is a reusable "Bayesian crank": specify a model, observation process, utility, and action space, then derive an adaptive policy.</p>
+
+    <h3>The book has four useful reading layers</h3>
+    <ul>
+      <li><strong>Chapters 2 to 4:</strong> GP inference, covariance design, model checking, selection, and averaging.</li>
+      <li><strong>Chapters 5 to 7:</strong> sequential decisions, terminal utility, cumulative reward, information gain, and common policies without requiring a GP.</li>
+      <li><strong>Chapters 8 to 10:</strong> GP-specific acquisition computation, implementation, and regret theory.</li>
+      <li><strong>Chapter 11 onward:</strong> costs, constraints, batches, multiple fidelities and tasks, multiple objectives, derivatives, robust optimization, active search, history, and an application bibliography.</li>
+    </ul>
+
+    <h3>Decision theory supplies the unifying structure</h3>
+    <p>An optimization policy is defined relative to a utility over the terminal dataset or the rewards accumulated along the way. Exact multi-step planning is generally intractable, so familiar acquisitions appear as approximations or one-step policies. This treatment makes EI, KG, entropy search, UCB, and Thompson Sampling comparable by the thing each implicitly values, rather than by formula alone.</p>
+
+    <h3>Stopping is itself an action</h3>
+    <p>When observations have costs, the action space can include termination. Continue only when the expected utility of another observation exceeds its cost. This is more principled than assigning a fixed number of trials or treating a small acquisition value as a universal stopping threshold. It also connects BO directly to commercial and scientific portfolio decisions.</p>
+
+    <h3>Model uncertainty should survive into the policy</h3>
+    <p>The modeling chapters distinguish choosing one GP from averaging across plausible models. The acquisition should be averaged over uncertain hyperparameters or structures when feasible, echoing <a href="spearmint.html">Spearmint</a>. Plug-in estimates are computationally convenient but can make the optimizer more confident than its evidence supports.</p>
+
+    <h3>Chapter 11 is the best bridge to real research systems</h3>
+    <p>Each extension changes the formal decision problem. A batch enlarges the action from one point to a set. Multi-fidelity BO chooses both location and information source. Freeze-thaw BO can start a new training run or resume a paused one. Active search changes utility from finding one optimum to discovering as many rare positives as possible. The framework stays stable while the action and reward change.</p>
+
+    <h3>Theory and implementation are kept separate on purpose</h3>
+    <p>The regret chapter explains what can be guaranteed under stated function classes and observation models. The implementation chapter deals with matrix conditioning, scalable GP approximations, acquisition optimization, initialization, and termination. The separation is useful because a theoretical policy can be damaged by approximate inference or a weak acquisition optimizer.</p>
+
+    <h3>How this library should use the book</h3>
+    <p>Read Chapters 1, 5, 6, and 7 for the conceptual spine. Use Chapters 2 to 4 and 8 to 10 when implementing or checking technical claims. Return to the relevant part of Chapter 11 before judging any paper about batches, costs, constraints, multiple sources, or autonomous experimentation. The annotated application bibliography is a route into domain examples, not required linear reading.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>The previous BO readings teach a successful recipe. Garnett asks why the recipe has that shape and how to redesign it when the real decision changes.</p>
+
+    <h4>1. A probability model is not yet a decision</h4>
+    <p>A GP can tell you what outcomes look plausible. It cannot tell you what to do until you state what counts as useful. Finding one excellent design, earning reward during the search, and learning the optimizer's exact location are different goals.</p>
+
+    <h4>2. An acquisition function is a compressed plan</h4>
+    <p>The ideal optimizer would think through every future observation and response. That tree grows too quickly. A one-step acquisition compresses the plan by asking which next observation gives the best immediate expected gain under a chosen utility.</p>
+
+    <h4>3. Change the action space when the laboratory changes</h4>
+    <p>If a cheap simulator and an expensive experiment are both available, the action is not merely "which design?" It is "which design, using which source?" If jobs can be paused, resuming one is a distinct action. Writing this down prevents an optimizer from solving a simpler problem than the lab actually faces.</p>
+
+    <h4>4. The human contribution is formalization</h4>
+    <p>The framework can automate a sequence after someone defines the objective, model, observations, actions, costs, and safety constraints. That is substantial work. Later autonomous-research systems try to automate parts of that formalization, which increases capability and also removes some of BO's cleanest guardrails.</p>
+
+    <h3>Going deeper: the checkpoint before Causal BO</h3>
+    <p>Classical BO treats the objective as an unknown surface over controllable inputs. <a href="cbo.html">Causal Bayesian Optimization</a> adds a causal graph and asks which interventions should even be considered. Garnett's template still applies, but the graph changes the action set, the surrogate, and the cost of information. That makes Causal BO a structural extension, not merely a new kernel.</p>
     <!-- DISCUSSION:END -->
   </section>
 
