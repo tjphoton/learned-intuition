@@ -42,14 +42,46 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>The review's main claim is about systems, not one algorithm</h3>
+    <p>Shahriari et al. describe Bayesian optimization as sequential model-based decision making. A probabilistic surrogate represents beliefs about the objective, a loss function states what good querying means, and an acquisition function is a tractable approximation to the otherwise intractable full sequential policy. The framework covers continuous, categorical, conditional, and combinatorial choices.</p>
+
+    <h3>Surrogate choice matters more than acquisition-function fashion</h3>
+    <p>The review deliberately gives modeling priority over the long list of acquisitions. It covers parametric beta-Bernoulli and linear models, Gaussian processes, random forests, input warping, partitioned models, nonstationarity, and heteroscedastic noise. Its closing judgment is direct: work often focuses heavily on acquisitions, but the underlying surrogate can matter more in practice.</p>
+
+    <h3>The acquisition taxonomy exposes different notions of utility</h3>
+    <p>The paper compares Probability of Improvement, Expected Improvement, GP-UCB, Thompson Sampling, Entropy Search, and portfolios that hedge across acquisitions. Myopic rules trade exploration against exploitation in different ways. The portfolio idea is especially practical: rather than claim one rule wins everywhere, allocate trials among several rules and learn which is working.</p>
+
+    <h3>Implementation details are part of the method</h3>
+    <p>The review treats acquisition optimization, initialization, GP hyperparameter inference, input transformations, parallel evaluation, and available software as core design choices. It describes constant-liar and Kriging-believer heuristics, then <a href="spearmint.html">Spearmint's</a> posterior fantasies for pending evaluations. A mathematically sound acquisition can still fail if its own optimizer misses useful modes.</p>
+
+    <h3>The history joins several fields that used different names</h3>
+    <p>The lineage runs from Thompson's 1933 adaptive treatment allocation, through Kushner and Močkus, kriging, sequential experimental design, DACE, and <a href="ego.html">EGO</a>. This matters because BO is not a single invention. It is a convergence of Bayesian inference, global optimization, bandits, and experimental design around the same exploration problem.</p>
+
+    <h3>The extension list predicts much of the next decade</h3>
+    <p>The review covers unknown constraints, evaluation cost, high dimensions, transfer and multi-task learning, parallelization, and freeze-thaw optimization using partial training curves. It also notes a theory-practice gap: regret guarantees commonly assume fixed GP hyperparameters, while successful systems infer or average over them.</p>
+
+    <h3>"Taking the human out" has a narrow meaning here</h3>
+    <p>The system automates choices inside a user-defined design space. Humans still choose the objective, constraints, model class, safe operating region, and stopping conditions. This boundary becomes central later in the library, where agentic systems begin changing code and hypotheses rather than only selecting a numeric query.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>This review is a map of classical BO at the moment it became a broad machine-learning field. It explains why good automation depends less on a clever score alone and more on whether the whole system represents the real problem well.</p>
+
+    <h4>1. The model defines what the optimizer can notice</h4>
+    <p>A stationary GP expects the same kind of smoothness everywhere. A random forest handles conditional choices differently. A warped input can represent that moving a learning rate from 0.001 to 0.01 matters more than moving it from 0.501 to 0.510. If the model cannot express the landscape, no acquisition rule can repair it.</p>
+
+    <h4>2. A robust system may hedge its decision rules</h4>
+    <p>EI, UCB, Thompson Sampling, and entropy search emphasize different kinds of evidence. A portfolio can let them compete during the run. This is a modest early form of meta-decision making: the system selects not only a point, but which style of reasoning gets influence.</p>
+
+    <h4>3. Automation moves the human boundary rather than erasing it</h4>
+    <p>The title sounds broader than the mechanism. BO removes manual trial selection after a problem has been formalized. It does not decide what success means or whether an experiment is ethical, safe, or scientifically informative.</p>
+
+    <h3>Going deeper: read this beside the later agentic survey</h3>
+    <p>When <a href="agenticsurvey.html">From AI for Science to Agentic Science</a> later describes autonomous scientific loops, compare its agent architecture with this review's BO stack. Both need a world model, an action policy, feedback, and a stopping rule. The key shift is that BO's actions are typed and bounded, while an LLM agent's action space is usually far more open.</p>
     <!-- DISCUSSION:END -->
   </section>
 
