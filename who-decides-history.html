@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>From Co-Scientist to Evolutionary Search — Learned Intuition</title>
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="assets/theme.css">
+<link rel="stylesheet" href="assets/history.css">
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" type="button">
+  <svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
+  <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="display:none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></svg>
+</button>
+
+<div class="wrap">
+  <a class="backlink" href="index.html#part3"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 8H3M7 4L3 8l4 4"/></svg>Back to study plan — Part III</a>
+
+  <header class="hist-header">
+    <span class="pillar-tag agentic">Part III — Who Decides</span>
+    <h1>From Co-Scientist to Evolutionary Search</h1>
+    <p class="hist-dek">Twelve papers, split into two experiments the field is running at once: can a team of LLM agents run open-ended science — choosing hypotheses, running labs, writing papers — with a person mostly watching? And, separately, in the one narrow setting where an exact evaluator exists, can a language model search code the way evolution searches genomes? The honest answer, read end to end, is that these two experiments are succeeding at very different rates.</p>
+    <div class="hist-stats">
+      <div class="stat"><div class="n tnum">12</div><div class="l">papers</div></div>
+      <div class="stat"><div class="n tnum">2023–2026</div><div class="l">span</div></div>
+      <div class="stat"><div class="n tnum">2</div><div class="l">modules</div></div>
+    </div>
+  </header>
+
+  <section class="act">
+    <span class="act-eyebrow">Orientation</span>
+    <h2>An autonomy ladder, not a switch</h2>
+    <span class="act-span"><a href="papers/agenticsurvey.html">Wei, Yang, Zhang, Chen, Zhuang et al.</a></span>
+    <div class="act-body">
+      <p>Before looking at any individual system, <a href="papers/agenticsurvey.html">"From AI for Science to Agentic Science"</a> gives this whole part its diagnostic vocabulary: four levels, from a Level-1 computational oracle (predicts a property, a person does everything else) through Level-2 automated research assistant (runs a defined sub-procedure, a person still owns the question) to Level-3 (a system pursues a broad goal through hypothesis, experiment, and revision with little intervention) and a prospective Level-4 (invents new instruments or frameworks, not just new findings inside an existing one). Its sharpest distinction, worth holding onto through the rest of this page: <strong>task autonomy is not goal autonomy</strong>. A system can run a long, elaborate, unattended workflow and still be Level 2, if a person defined the question and the allowed procedure. That's a stricter and more useful test than counting tool calls or hours of unsupervised execution.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act I — 2024 to 2026</span>
+    <h2>Free-form co-scientist teams</h2>
+    <span class="act-span">Co-Scientist · Robin · The AI Scientist (v1 &amp; v2) · Agent Laboratory · AgentRxiv</span>
+    <div class="act-body">
+      <p><a href="papers/coscientist.html">Google DeepMind's AI Co-Scientist</a> is the most institutionally-backed exemplar: a Gemini-based multi-agent tournament (Generation, Reflection, Ranking, Evolution, Proximity, Meta-review) that generates, critiques, and evolves hypotheses. Its literature-search ablation is genuinely persuasive on its own terms — an already-published idea's novelty score drops from 6.14 to 2.38 out of 10 once the system is actually allowed to search for prior art — and its wet-lab follow-through (KIRA6 showing an 18-fold IC50 separation between AML cells and a healthy control) is real preclinical evidence, not a benchmark number. But the paper is candid that experts framed every research goal (about an hour of setup) and reviewed every result (about three hours) — this is Level 2, a hypothesis engine connected to expert judgment, not an autonomous laboratory.</p>
+      <p><a href="papers/robin.html">Robin</a> (FutureHouse) narrows the funnel deliberately — disease, then mechanism, then assay, then candidate compounds — and closes an actual loop between a real wet lab and the next round of hypotheses: a first screen recommended RNA-sequencing, which found a three-fold rise in ABCA1 expression, which fed a second round that surfaced ripasudil, a repurposed glaucoma drug, as the strongest candidate. Its most instructive detail isn't the discovery itself, though — it's a data point about automated analysis: the system's own automated pipeline estimated a 7.5-fold phagocytosis increase from the same flow-cytometry data a human researcher read as 1.75-fold. Same experiment, same data, a >4× disagreement in the interpretation layer.</p>
+      <div class="pull agentic"><p>Automated peer review gave Agent Laboratory's autonomous papers a 6.1-out-of-10 average. Ten human PhD students, reviewing the same papers, gave them 3.8. The two scores didn't even predict each other. This is the single most important number in this whole part of the library.</p></div>
+      <p><a href="papers/aiscientist1.html">The AI Scientist</a> (2024) and <a href="papers/aiscientist2.html">its v2</a> (2025) push furthest toward genuinely unattended execution — idea, code, experiment, plot, full paper, simulated review, entirely inside a machine-learning-in-code sandbox, at $10–15 per paper. v1's own detailed case study is the honest core of the whole module: the generated "DualScale Diffusion" paper implemented a real architecture and reacted to weak intermediate results, but also invented its own GPU model in the write-up and called a worse metric an "improvement." v2 removed v1's human-written code templates and added parallel tree search — a real structural improvement — and produced the first AI-generated paper to score high enough for a real ICLR workshop's acceptance bar. But the authors' own later audit of that exact paper found roughly <strong>57% overlap between its training and test data</strong> — a basic methodological error external peer review simply didn't catch.</p>
+      <p><a href="papers/agentlab.html">Agent Laboratory</a> draws the honest boundary this act needed: a person owns the research question, the agent team assists. Its human-rating study is the act's clearest empirical warning — autonomous-mode papers scored 2.6–3.2 out of 5 from real PhD reviewers, well below the system's own 6.1/10 self-assessment, and even with a human "co-pilot" checking in at every stage, quality rose only to 4.38/10, still short of a real NeurIPS acceptance bar. <a href="papers/agentrxiv.html">AgentRxiv</a> extends the same system with a shared preprint archive so later agent runs can build on earlier ones — a real, measured effect (accuracy on a math benchmark climbed from 70.2% to 78.2% with shared memory, versus plateauing near 73.5% without it) — but its own honest disclosure is the sharpest one in the act: the raw pipeline frequently produced reports whose numbers didn't match the underlying code, and every accuracy curve in the paper is a <em>human-audited</em> subset of what the system actually generated, not unattended output.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act II — 2026</span>
+    <h2>The counterweight</h2>
+    <span class="act-span"><a href="papers/critique.html">Bisht, Kumar, Jablonka, Mausam &amp; Krishnan</a></span>
+    <div class="act-body">
+      <p>"Agentic AI Scientists Are Not Built For Autonomous Discovery" is the load-bearing paper for this entire part, and it's worth reading as a direct explanation for the pattern Act I keeps producing (fluent, confident, and quietly wrong). Its central argument has three parts. First, the <strong>McNamara fallacy</strong>: current systems excel exactly where a benchmark score already exists, which silently biases what gets studied toward what's measurable rather than what matters — deciding whether a field needs a new theory, a safer synthesis route, or a manufacturability fix is itself a scientific judgment no benchmark can make. Second, published papers are a filtered record — they preserve successful conclusions and systematically omit failed syntheses, unreliable suppliers, and the tacit "this measurement looks wrong" judgment that lets a real scientist distrust a suspiciously clean result. Third, and most concretely tested: the paper's own "hypothesis hivemind" experiment had six frontier models each propose extensions to 50 materials-science papers, and found their proposals clustering in embedding space at a rate suggesting preference-tuned models converge toward safe, familiar consensus rather than genuinely diverse new ideas — a plausible mechanistic explanation for why so many Act-I systems, despite different architectures, tend to rediscover similar territory.</p>
+      <p>The paper's proposed fix is a "persistent world model" — an explicit, durable representation of what the system currently believes and why, that a failed experiment can actually update, rather than each pipeline stage running as an independent, forgetful task. It's a recommendation, not a demonstrated solution — but it names precisely the missing piece in every Act-I system above: none of them have a persistent belief state that a wet-lab result, a code failure, or a randomized-feedback ablation is actually guaranteed to change.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act III — 2023 to 2026</span>
+    <h2>Evolutionary program search</h2>
+    <span class="act-span">FunSearch · AlphaEvolve · ADRS · AlphaLab</span>
+    <div class="act-body">
+      <p>This act is where the module's evidence gets dramatically stronger, and the reason is architectural, not a matter of better prompting: every system here pairs an LLM proposer with an <em>exact</em>, unforgiving evaluator, so a hallucinated explanation simply cannot survive contact with the scoring function. <a href="papers/funsearch.html">FunSearch</a> (2023, Nature) is the origin: evolve one small function inside a human-written skeleton, score it exactly, keep the survivors. Its cap-set result is genuinely unimpeachable because it's exactly checkable — a set of size 512 in dimension 8, improving the field's asymptotic lower bound for the first time in twenty years — and its most interesting detail is a real human-machine handoff: researchers read a discovered priority function, spotted a symmetry a machine wouldn't name as such, and used that human insight to narrow the next search, which produced the paper's best result.</p>
+      <ul class="timeline">
+        <li><span class="t-year">2023 · Nature</span><span class="t-title"><a href="papers/funsearch.html">FunSearch</a></span><span class="t-note">Evolves one function inside a human skeleton. Improved a 20-year-old cap-set bound; exact evaluator makes the result unimpeachable.</span></li>
+        <li><span class="t-year">2025</span><span class="t-title"><a href="papers/alphaevolve.html">AlphaEvolve</a></span><span class="t-note">Evolves whole codebases. Found a rank-48 4×4 complex matrix multiplication algorithm (beating Strassen-derived rank 49); deployed scheduling heuristic recovers 0.7% of Google's fleet compute in production.</span></li>
+        <li><span class="t-year">2025</span><span class="t-title"><a href="papers/adrs.html">ADRS (Barbarians at the Gate)</a></span><span class="t-note">Generalizes the pattern to systems research specifically — cloud scheduling, MoE load balancing — automating an estimated 40% of PhD systems-research time, with an honest note that headline speedup numbers shift between the paper's prose and its own tables.</span></li>
+        <li><span class="t-year">2026</span><span class="t-title"><a href="papers/alphalab.html">AlphaLab</a></span><span class="t-note">The agent builds its own evaluator (with an adversarial Critic checking it) before searching — GPT-5.2 and Claude Opus 4.6 found qualitatively different solutions across CUDA kernels, pretraining, and traffic forecasting.</span></li>
+      </ul>
+      <p><a href="papers/alphaevolve.html">AlphaEvolve</a> (2025) is this act's strongest evidence overall, because its results don't stop at a benchmark — a discovered scheduling heuristic is deployed across Google's actual production fleet and measured recovering 0.7% of otherwise-stranded compute; a TPU tiling heuristic measurably sped up Gemini's own training by 1%. That's a real feedback loop (the system improving infrastructure that trains its successor), though the paper is careful to frame it as a slow, human-infrastructure-mediated cycle, not an uncontrolled takeoff. <a href="papers/adrs.html">ADRS</a> (2025) generalizes the same recipe to systems research broadly and is refreshingly honest about a real inconsistency in its own reporting — its MoE-rebalancing speedup is quoted as "five-fold" in prose and "two-fold" in its own summary table — a useful reminder to read even the strongest papers in this act with the same scrutiny applied to Act I. <a href="papers/alphalab.html">AlphaLab</a> (2026) closes the module by pushing autonomy one layer further upstream: instead of a human writing the evaluator, the agent team builds its own (with a dedicated adversarial Critic auditing it for leakage and lookahead bugs) — and its clearest finding is that different frontier models produce genuinely different, complementary engineering solutions to the same problem, evidence for real diversity in exactly the domain where the critique paper found the opposite.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Where this leaves you</span>
+    <h2>Two experiments, two different verdicts</h2>
+    <div class="act-body">
+      <p>Read end to end, this part's honest conclusion is a contrast, not a single verdict. Where an exact, unforgiving evaluator exists — a cap set is either size 512 or it isn't; a matrix-multiplication algorithm either works or it doesn't; a scheduling heuristic either saves compute in production or it doesn't — evolutionary program search (Act III) has produced results that are genuinely, independently verifiable, several deployed in real production systems. Where the objective is open-ended science itself — choosing what matters, weighing tacit lab knowledge, judging novelty — the free-form co-scientist teams (Act I) remain useful research <em>assistants</em>, consistently overestimating their own output relative to independent human judgment (Agent Laboratory's 6.1-vs-3.8 gap is the number to remember), and the counterweight paper (Act II) gives the mechanistic reason why: no persistent belief state, no protected space for genuine anomalies, training data that hides the tacit knowledge real discovery needs. The two threads meet at one shared, load-bearing question, first raised back in <a href="decide-history.html">Part II's history</a>: does this system's next action actually change when you scramble its feedback? Where the answer is yes and checkable, trust the result. Where it isn't — or can't be checked — read the polished narrative as exactly that: a narrative, not yet evidence.</p>
+    </div>
+  </section>
+
+  <nav class="hist-nav">
+    <a href="decide-history.html"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M13 8H3M7 4L3 8l4 4"/></svg>Part II history: Decide — Bayesian Optimization</a>
+    <a href="recognize-history.html">Part I history: Recognize — SBI<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+  </nav>
+
+  <footer class="hist-footer">
+    <a href="index.html">Learned Intuition</a> · Simulation-Based Inference, Bayesian Optimization &amp; Agentic Research
+  </footer>
+</div>
+
+<script src="assets/theme.js"></script>
+</body>
+</html>
