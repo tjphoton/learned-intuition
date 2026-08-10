@@ -42,14 +42,66 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>What kind of document this is (worth being precise about)</h3>
+    <p>Unlike <a href="tabpfn.html">the Nature paper</a> (peer-reviewed), this is an arXiv technical report from Prior Labs — the company Hollmann, Müller, and Hutter founded around TabPFN. It's still substantive and grounded in a genuine public benchmark (TabArena, appearing at NeurIPS 2025's Datasets & Benchmarks track), but a meaningful share of its results also come from an internal, proprietary benchmark of 100+ real business use cases that outside readers can't inspect or reproduce — worth weighting the public-TabArena claims more heavily than the internal-benchmark claims for that reason.</p>
+
+    <h3>The scale-up, precisely (Table 1 in the paper)</h3>
+    <ul>
+      <li><strong>TabPFN v1</strong> — max 1,000 rows, 100 features, numerical-only, depth 8, pure ICL.</li>
+      <li><strong>TabPFN v2 (Nature)</strong> — max 10,000 rows, 500 features, mixed data types, depth 12, pure ICL.</li>
+      <li><strong>TabPFN-2.5</strong> — max 50,000 rows, 2,000 features, mixed data types, depth 18–24, ICL + distilled MLP/Trees.</li>
+    </ul>
+    <p>5× more rows, 4× more features than the Nature paper's TabPFN — a ~20× increase in raw data cells. In exploratory (unvalidated, not benchmarked) runs, classification fit in memory up to ~160k rows on a single H100 GPU — explicitly flagged by the authors as outside the validated range, not a claimed capability.</p>
+
+    <h3>Four concrete architectural/training changes versus TabPFN v2</h3>
+    <ul>
+      <li><strong>Deeper networks</strong>: 12 → 18 layers (regression), 12 → 24 layers (classification).</li>
+      <li><strong>Larger feature groups</strong>: features are now embedded in groups of 3 instead of 2 — trades a little granularity for meaningfully faster training and inference.</li>
+      <li><strong>A 2-layer MLP replaces the linear encoder</strong> for regression targets — a small but measurable accuracy improvement.</li>
+      <li><strong>64 new "thinking rows"</strong> added to the input, learned during pretraining — directly inspired by the LLM literature's "pause tokens" and vision transformers' "registers": extra computational capacity that also functions as an attention sink, helping the model learn to selectively ignore less-relevant rows. This is new territory for TabPFN, borrowed wholesale from a completely different subfield (LLM/ViT architecture research) — not an incremental tweak to the original dual-attention design, which is otherwise unchanged.</li>
+    </ul>
+
+    <h3>A real strategic reversal: synthetic-only no longer means synthetic-only</h3>
+    <p>The Nature paper's entire premise was training <em>purely</em> on synthetic data specifically to avoid privacy, copyright, and train/test-contamination problems that come with real training corpora. This report introduces <strong>Real-TabPFN-2.5</strong>: the same architecture, additionally fine-tuned on a curated corpus of 43 real-world datasets from OpenML and Kaggle (deduplicated against every benchmark used to evaluate it). It consistently widens TabPFN-2.5's lead over baselines. This is worth flagging as a genuine reversal of the original paper's stated design philosophy, not just an incremental option — the "avoid real data entirely" selling point from the Nature paper is now explicitly a knob, not a fixed principle.</p>
+
+    <h3>The headline benchmark result</h3>
+    <p>On TabArena-Lite (≤10,000 samples, 500 features): TabPFN-2.5, in a single forward pass, outperforms AutoGluon 1.4 tuned for four hours — an ensemble that itself includes TabPFNv2 as one of its constituent models. So the claim isn't just "beats individual tuned trees," it's "beats a four-hour ensemble that already includes its own predecessor." Scaling to the full unrestricted TabArena (up to 100,000 samples, 2,000 features): TabPFN-2.5 ranks best among default (untuned) models, and Real-TabPFN-2.5's default performance alone beats any other tuned-and-ensembled model on the larger classification datasets. Head-to-head against TabPFNv2 specifically (Fig. 2): TabPFN-2.5 "clearly outperforms TabPFNv2 on almost all datasets, and is never much worse" — a near-strictly-dominant upgrade, not a mixed trade-off.</p>
+
+    <h3>Solving the Nature paper's own stated weakness: a distillation engine</h3>
+    <p>The Nature paper's Methods section admitted plainly that TabPFN's inference could be slower than CatBoost per single prediction, and that memory scales linearly with dataset size. TabPFN-2.5 answers this directly with a new <strong>distillation engine</strong>: given a specific training dataset, it converts TabPFN-2.5's learned behavior on that dataset into a compact, dataset-specific MLP ("TabPFN-2.5-as-MLP") or tree ensemble ("TabPFN-2.5-as-TreeEns"). Unlike TabPFN itself, the distilled model does <em>not</em> do in-context learning — it's a normal, fast, low-memory single-datapoint predictor, deployable in latency- or regulation-constrained production pipelines where dropping in a full transformer isn't practical. In the paper's own internal benchmark, both distilled variants still outperform tuned tree-based baselines while running dramatically faster than full TabPFN-2.5.</p>
+
+    <h3>A provocative causal-inference result — and a quiet tension with Do-PFN/CausalPFN</h3>
+    <p>Using the RealCause benchmark (real randomized-trial data with synthetically injected confounding), the report wraps TabPFN-2.5 in standard causal-inference "meta-learner" wrappers (S-/T-/X-Learner — generic recipes that turn any regression model into a treatment-effect estimator) and finds PFN-based estimators occupy the <strong>top seven positions</strong> on the leaderboard, with TabPFN-2.5-as-T-Learner beating specialized causal methods (DragonNet, TARNet, ForestDML) <em>and</em> beating CausalPFN itself, a model purpose-built for causal effect estimation. The paper's own conclusion: "improvements in base model predictive performance transfer to the problem of causal inference" — i.e., you may not need a bespoke causal architecture at all if the underlying general-purpose tabular model is good enough. Worth carrying this forward as a genuine open question when reading <a href="dopfn.html">Do-PFN</a> and <a href="causalpfn.html">CausalPFN</a> later in this order: what does a purpose-built causal architecture actually buy you once a strong enough general model exists? (Likely candidates: principled handling of unidentifiable effects and calibrated uncertainty under hidden confounding — see those papers' own claims — rather than raw point-estimate accuracy on a benchmark like RealCause.)</p>
+
+    <h3>A business-model shift worth naming plainly</h3>
+    <p>TabPFN-2.5 ships under a new, restrictive "TABPFN-2.5 License v1.0": free for testing, evaluation, and internal benchmarking, but <strong>commercial or production use is explicitly prohibited</strong> without purchasing a Commercial Enterprise License. This is a real change from the Nature paper's open publication — Prior Labs now also offers a paid cloud API. Not a criticism, just a fact worth being clear-eyed about: the research lineage this whole module is built on has partly moved from open academic publication toward a commercial product, which may matter for anyone planning to build on this specific release.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Read <a href="tabpfn.html">tabpfn.html</a> first — this page assumes the "fake spreadsheets, millions of times" training story and just tracks what changed in the next release.</p>
+
+    <h4>1. Same recipe, bigger and deeper</h4>
+    <p>Nothing about the core idea changed — same synthetic-causal-model training recipe, same two-way attention across rows and columns. What changed is scale: the network got deeper (up to 24 layers, up from 12), and it can now digest tables five times bigger (50,000 rows instead of 10,000) and four times wider (2,000 columns instead of 500). A useful way to think about "thinking rows," the one genuinely new architectural idea here: alongside your real data rows, the model quietly keeps 64 extra rows of its own that aren't part of your dataset at all — a kind of scratch space it learned to use during training, borrowed from an idea that showed up first in large language models (giving them "pause tokens" to think before answering) and in image transformers (giving them blank "register" slots to dump irrelevant computation into instead of polluting real data's representations).</p>
+
+    <h4>2. The most surprising number in the report</h4>
+    <p>In one forward pass, no tuning at all, TabPFN-2.5 beats a four-hour-tuned ensemble that <em>already includes its own predecessor as one of its ingredients</em>. That's a stronger claim than "beats a strong baseline" — it's "beats a system that already tried using the previous version of me, plus several other strong models, combined and tuned for hours."</p>
+
+    <h4>3. A quiet reversal worth noticing</h4>
+    <p>The original TabPFN's whole pitch included: "we never touch real training data, so there's no privacy risk, no copyright risk, no chance of accidentally training on your test set." This release offers a version — Real-TabPFN-2.5 — that deliberately does the opposite: after the usual synthetic pretraining, it gets further trained on 43 real datasets. It performs better for it. That's worth sitting with for a second: the earlier paper's philosophical selling point (all-synthetic, no real data, ever) turns out to be a dial you can turn, and turning it toward "more real data" helps. Worth remembering as a pattern that may repeat in later papers too — a stated principle in one paper quietly becoming an optional setting in the sequel.</p>
+
+    <h4>4. Fixing the "but it's slower than CatBoost" complaint directly</h4>
+    <p>The Nature paper was honest that TabPFN could be slower per-prediction than an already-fitted CatBoost model, and that its memory use grows with dataset size. This release's answer is clever: rather than trying to make the big transformer itself faster, train it once on your data, then have it "teach" a much smaller, ordinary model (a small neural net, or a tree ensemble) to imitate its behavior on that specific dataset. You get most of TabPFN's accuracy in something that runs like an ordinary lightweight model — genuinely useful for situations where a giant model can't be deployed at all (strict latency budgets, regulatory environments that require simple auditable models, embedded/edge deployment).</p>
+
+    <h4>5. A finding that quietly complicates the causal-modeling story</h4>
+    <p>Later in this reading order, two papers (Do-PFN and CausalPFN) will make the case that estimating "what would happen if we intervened" requires a specially built architecture, trained specifically on pairs of observed-vs-intervened data. This report's own causal-inference section pushes back a little on that, without engaging with it directly: take the plain, general-purpose TabPFN-2.5 — not built for causal reasoning at all — wrap it in an old, generic statistical recipe for estimating treatment effects, and it beats CausalPFN on a standard benchmark. Worth carrying this forward as a genuine open question rather than a settled score: does a purpose-built causal model still win on something a generic wrapper can't touch — like knowing when it doesn't have enough information to give a confident answer at all?</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>The paper's own "Ecosystem & Adoption" section (Section 2) is worth returning to once more of this library's modules are covered — it explicitly name-checks several later reading-order threads as things now <em>built on top of</em> TabPFN: TabPFN-TS for time series (next few papers, <a href="tabpfnts.html">tabpfnts.html</a>), GIT-BO using TabPFNv2 inside high-dimensional Bayesian optimization (a direct bridge to the whole Decide/BO pillar of this library), and Do-PFN/CausalPFN/CausalFM for causal inference. Seeing this one paper cited as infrastructure across time-series, BO, and causal-inference branches is a concrete illustration of why this module is positioned as "the mechanism" underlying the rest of the book, not just one more paper in a list.</p>
+    <p>Also worth flagging plainly rather than passing over: a nontrivial share of this report's strongest claims rest on an internal, proprietary benchmark this project has no way to independently verify — a different epistemic footing than the peer-reviewed, publicly-benchmarked Nature paper it follows. The public TabArena results are real third-party evidence; the internal-benchmark results should be read as the company's own account of its product's performance.</p>
     <!-- DISCUSSION:END -->
   </section>
 
