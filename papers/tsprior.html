@@ -42,14 +42,64 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>Calibrate expectations first: a workshop paper with a proof-of-concept GRU, not a transformer</h3>
+    <p>Published at the ICLR 2026 Workshop on Time Series in the Age of Large Models — not a main-track paper — and explicit about its own preliminary status. The "PFN" trained and evaluated in this paper is a tiny 2-layer GRU (128 hidden units, ~11 minutes of CPU training, a 330KB checkpoint), deliberately chosen over a transformer (the architecture <a href="dopfn.html">Do-PFN</a> and <a href="causalpfn.html">CausalPFN</a> both use) "for computational simplicity in this proof-of-concept." The real contribution here is the data-generating <em>prior</em> (CausalTimePrior) — a gap-filling tool for training future causal time-series foundation models — not a finished, benchmarked foundation model itself.</p>
+
+    <h3>The gap this paper actually fills</h3>
+    <p>Existing time-series causal-discovery benchmarks (CausalTime, TimeGraph, CauseMe/CausalRivers) provide only <em>observational</em> data with a ground-truth graph — none provide the paired interventional data a causal foundation model actually needs to train on, the same way <a href="dopfn.html">Do-PFN</a> and <a href="causalpfn.html">CausalPFN</a> need paired observational/interventional tabular data. Of the small number of generators that do support interventions, each has a real limitation (Table 1): CAnDOIT only supports hard interventions on known single nodes; TECDI is limited to linear mechanisms; CaTSG needs training a separate diffusion model per dataset rather than fast analytic prior sampling. CausalTimePrior is the first to combine <strong>all three</strong> intervention types, nonlinear mechanisms, <em>and</em> regime-switching dynamics in one generator.</p>
+
+    <h3>Three intervention types, precisely — genuinely new vocabulary relative to the rest of this module</h3>
+    <ul>
+      <li><strong>Hard</strong> — the standard do-operator: replace the variable with a constant, sever incoming causal edges. The same intervention type Do-PFN and CausalPFN both use, now with an explicit onset time.</li>
+      <li><strong>Soft</strong> — perturb the mechanism's output with an additive shift while <em>preserving</em> parental influence — a gentler "nudge" rather than a full override. Neither Do-PFN nor CausalPFN implement this — it's a genuinely new capability, and arguably a better match for many real policy interventions (a price change nudges demand; it doesn't sever demand from its other causes).</li>
+      <li><strong>Time-varying</strong> — replace the mechanism with a time-dependent profile (step, ramp, sinusoidal, or a sampled trajectory) instead of a fixed value. Do-PFN and CausalPFN both only handle a single fixed intervention value; this is the first paper in the module to support an intervention that itself changes over the observation window.</li>
+    </ul>
+
+    <h3>Regime-switching — an explicitly claimed first</h3>
+    <p>Real causal relationships aren't always fixed — market regimes shift, policy regimes change. CausalTimePrior's regime-switching extension lets the causal graph and mechanisms themselves switch between 2–3 alternative versions according to a "sticky" Markov chain (~90% probability of staying in the current regime at each step, so structure persists for a while before occasionally jumping) — used in 15% of the paper's training data. The paper states this is the first framework to combine regime-switching dynamics with interventional time-series generation specifically.</p>
+
+    <h3>A precise, important distinction the paper draws explicitly: interventional vs. counterfactual</h3>
+    <p>CausalTimePrior generates paired data using <em>independent</em> noise realizations for the observational and interventional runs of the same SCM — meaning it answers "what would a <em>new</em> draw from the system look like under this intervention" (a population-level question), not "given <em>this specific</em> observed trajectory, what would have happened instead" (a unit-level counterfactual, which needs Pearl's three-step abduction-action-prediction procedure and shared noise between the two runs). The paper is explicit that generating true counterfactual pairs — sharing the pre-sampled noise tensor so the two trajectories are identical before the intervention and diverge only through the intervention's causal effect — is a natural, strictly harder extension, not something this paper does yet.</p>
+
+    <h3>Honest, structural limitations named in the paper's own design-choices section</h3>
+    <ul>
+      <li><strong>Short-range bias, by construction</strong>: bounded max lag (K∈{1,2,3}), geometric edge decay, and bounded activation functions mean causal effects in the prior attenuate rapidly, typically within 1–5 steps of intervention onset. The paper states plainly: "a PFN trained on this prior would inherit this short-range bias," underweighting long-range effects like "economic policy impacts over months."</li>
+      <li><strong>Markovian noise only</strong>: noise is i.i.d. across time and variables, meaning the causal graph is assumed to fully mediate all temporal dependencies. Extending to non-Markovian (temporally correlated) noise — which would model persistent latent confounders — is named directly as unfinished future work.</li>
+      <li><strong>No explicit canonical-structure stratification</strong>: unlike Do-PFN's prior, which explicitly ensures coverage of confounders, mediators, and colliders as named subgraph types, this prior's Erdős–Rényi graph sampling covers those motifs only implicitly, not by explicit design.</li>
+      <li><strong>Zero real-world validation so far</strong> — purely synthetic-to-synthetic, by the paper's own admission.</li>
+    </ul>
+
+    <h3>Preliminary results, reported with unusual honesty about mixed outcomes</h3>
+    <ul>
+      <li>The tiny GRU correctly distinguishes causal from non-causal queries: predicted/ground-truth effect ratio of 0.95 for intervened variables, 0.85 for downstream (causally reachable) variables, but only 0.46 for non-causal variables — correctly predicting near-zero effect where there's genuinely no causal path.</li>
+      <li>A <strong>shuffled-intervention control</strong> (good scientific practice worth noting on its own): randomly relabeling which variable is the intervention target changes the model's predictions substantially (+33% mean prediction) — confirming real sensitivity to intervention-target identity, not memorized position. But non-causal predictions still shift somewhat under shuffling (+13%) — an honestly-reported partial finding suggesting the tiny model has "also partially learned distributional properties of variable positions," not pure causal reasoning.</li>
+      <li>Against baselines: comparable RMSE to a per-dataset-fit VAR-OLS model (176.4 vs. 176.5) while requiring <em>no</em> per-dataset fitting — but PCMCI+ (a classical causal-discovery method that explicitly discovers the graph first) achieves <em>lower</em> RMSE (161.4) at the cost of expensive per-sample graph discovery, and VAR-OLS actually beats the causal-aware model on effect-direction accuracy specifically (93.7% vs. 70.4%) — a genuinely mixed result, not a clean win, reported as such.</li>
+      <li>A compelling worked example (Appendix J): a held-out case with a strong spurious correlation (−0.49) between two causally unconnected variables. Ground truth intervention effect: nearly zero (−0.056). The tiny GRU predicts −0.050 (error 0.005); VAR-OLS — which only ever learns correlations — predicts −0.992, a <strong>177× larger error</strong>, mistaking the spurious correlation for a real causal effect. A small, concrete, genuinely persuasive illustration of why the causal framing matters, even from a proof-of-concept model.</li>
+      <li>Out-of-distribution generalization is partial, not complete: performance degrades on larger, denser, more nonlinear graphs outside the training range, though the model "retains some causal understanding" (intervened queries still outperform downstream queries, consistent with the in-distribution pattern).</li>
+    </ul>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Read <a href="dopfn.html">dopfn.html</a> and <a href="causalpfn.html">causalpfn.html</a> first. Those papers ask "what happens to an outcome if we intervene on a treatment, right now, once." This paper asks the same question stretched across time — what happens to a whole trajectory, over the following days or weeks, and what if the very rules connecting cause to effect can shift partway through?</p>
+
+    <h4>1. Nudging vs. overriding — a distinction worth having names for</h4>
+    <p>Every earlier causal paper in this library only ever asks "what if we forced this variable to some fixed value, completely overriding its normal causes." This paper adds a gentler option: what if we just nudge it a bit, while letting its normal causes keep partially influencing it too? That's a much better match for how most real interventions actually work — a price change doesn't erase every other reason demand moves, it shifts it.</p>
+
+    <h4>2. When the rules of the game change mid-game</h4>
+    <p>Every earlier paper assumed the causal wiring diagram stays fixed for the whole dataset. This paper adds the possibility that the wiring itself can flip to a different diagram partway through — like a market that behaves one way in calm conditions and a genuinely different way during a crisis, with the underlying cause-and-effect relationships themselves changing, not just the numbers. Training a model to recognize and handle that possibility, rather than being blindsided by it, is a real and underexplored problem this paper is the first to combine with the "generate fake interventions to learn from" recipe.</p>
+
+    <h4>3. "What would happen to someone like this" vs. "what would have happened to this exact person"</h4>
+    <p>This is a genuinely important distinction worth understanding precisely, and the paper is unusually careful about it. "If we ran this experiment again on a similar case, what would we expect to see" is one question — and it's the one this paper's data generator actually answers. "Given exactly what happened to this specific case, what would have happened differently if we'd intervened" is a harder, different question — it requires reasoning about the exact, specific randomness that produced the one outcome you actually observed, not just the general pattern. The paper is honest that it only tackles the first, easier question so far.</p>
+
+    <h4>4. A model that mostly gets the point but occasionally cheats a little, caught in the act</h4>
+    <p>The shuffling experiment here is worth appreciating as a piece of good scientific hygiene: instead of just showing the model works, the authors deliberately tried to trick it by scrambling which variable was supposedly intervened on, to see if it was actually paying attention to that information or just pattern-matching on something irrelevant. The model mostly passed — its answers changed appropriately when the "true" intervention target changed — but not perfectly, and the authors say so plainly rather than only reporting the flattering half of the result.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>Worth remembering this paper's place in the reading order precisely: it's the newest, least mature contribution in Module 04, closer to a promising research direction than a finished, benchmarked tool — a genuine gap-filling contribution (a missing kind of training data generator) rather than a competitor to Do-PFN or CausalPFN in the way those two compete with each other. The comparison worth returning to once all three are fresh: this paper explicitly names Do-PFN's canonical-motif stratification (confounders/mediators/colliders) as something its own prior lacks — worth checking, if a future version of this line of work appears, whether that specific gap gets closed the same way TabPFN-3 closed its own previously-flagged prior gaps (widen the prior, cite the earlier paper's fix as the template).</p>
     <!-- DISCUSSION:END -->
   </section>
 
