@@ -42,14 +42,52 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>This is the direct technical answer to Hermans et al.'s own call to action</h3>
+    <p><a href="trustcrisis.html">Hermans et al.</a> closed their paper by calling for "theoretical and methodological developments... new objective functions that would force posterior estimators to always be conservative." Three of this paper's authors (Delaunoy, Wehenkel, Louppe) also co-authored that paper. This is that call, answered directly: turn the coverage diagnostic itself into a trainable loss term.</p>
+
+    <h3>The key formal machinery — closed-form HPDR identification (Lemma 1)</h3>
+    <p>Finding the Highest Posterior Density Region (HPDR) at a given confidence level normally requires solving an optimization problem for every single instance — far too expensive to do at every training step. Lemma 1 gives a closed-form way to identify the HPDR that a specific (θ*, x*) pair implicitly defines, without solving that optimization from scratch. This is the piece of engineering that makes the whole approach computationally feasible at training time — the paper explicitly builds a chain of lemmas from Lemos et al. and Hermans et al. to get there.</p>
+
+    <h3>Two related but distinct penalties (Eq. 7–8)</h3>
+    <p><strong>Calibration error</strong>: average absolute gap between claimed and actual coverage at a set of confidence levels — penalizes deviation in <em>either</em> direction (too narrow or too wide). <strong>Conservativeness error</strong>: the same idea but passed through a rectifier (max(·,0)) that only penalizes <em>under</em>-coverage — deliberately not punishing a model for being "too safe." This directly encodes <a href="trustcrisis.html">Hermans et al.'s</a> own asymmetric-cost argument (excluding the truth is the dangerous failure; being overly cautious is comparatively harmless) as a concrete, differentiable training signal rather than just a philosophical stance.</p>
+
+    <h3>Making an inherently discrete, sorting-based diagnostic differentiable</h3>
+    <p>The regularizer is built on the exact same <strong>rank statistic</strong> concept as <a href="sbc.html">Talts et al.'s SBC</a> — but SBC's own machinery (indicator functions, sorting, histogram binning) is not differentiable by default, and NRE specifically can't use the reparameterization trick to backpropagate through sampling. The paper stitches together three separate fixes: a Straight-Through Estimator with a Hard Tanh relaxation to make the indicator function differentiable; a genuinely differentiable sorting operation (Blondel et al.) to make rank computation differentiable; and self-normalized importance sampling (instead of direct sampling) to estimate the needed integral without requiring reparameterizable sampling. None of these tricks is individually novel — the contribution is assembling them into one coherent, trainable pipeline built directly on SBC's own diagnostic logic.</p>
+
+    <h3>The combined objective (Eq. 12) and what it costs</h3>
+    <p>Standard training loss (NLL for NPE, cross-entropy for NRE) plus λ times the uniformity-enforcing regularizer, trained end-to-end with AdamW. Two hyperparameters matter in practice: L (samples used per regularizer evaluation) and λ (its weight) — both show a genuine, non-free trade-off (below). Computational overhead: on CPU, training time grows roughly linearly with L; on GPU, overhead stays roughly constant (~2×) regardless of L, thanks to parallelism — meaning the practical cost is manageable on modern hardware, especially compared to the alternative of just acquiring more simulations.</p>
+
+    <h3>Results across Hermans et al.'s own six benchmarks</h3>
+    <p>CalNRE (this method applied to NRE) systematically produces more conservative posteriors than plain NRE, and compares favorably to BNRE (Delaunoy et al.'s earlier balancing regularizer, used as a baseline) specifically on predictive power (expected log posterior density) — achieving conservativeness with less sacrifice of informativeness. CalNPE similarly nudges NPE toward conservative, though honestly falls short of the target on the Gravitational Waves benchmark at the tested budgets — an openly reported limitation, not glossed over, fixable in principle by increasing λ. One genuinely counterintuitive finding: the regularizer sometimes <em>increases</em> predictive power relative to the unregularized baseline — the authors' hypothesis is that it acts as an implicit defense against overfitting to the training set, a real side-benefit beyond calibration itself.</p>
+
+    <h3>An honest negative result, reported rather than hidden (Appendix C)</h3>
+    <p>When the regularizer is retargeted to pursue <em>exact</em> calibration (rather than the softer conservativeness objective used in the paper's main results), the resulting coverage curve becomes characteristically S-shaped: overconfident at low credibility levels, overconservative at high ones — netting out to roughly zero average error while still being locally wrong at every specific level, and with measurably worse predictive power than the conservativeness-only version. This is a deliberate, well-justified design choice made visible: the paper targets the weaker, achievable, and (per Hermans et al.'s own argument) <em>sufficient</em> goal of conservativeness rather than the harder, costlier goal of exact calibration — and shows you the failure mode of the road not taken.</p>
+
+    <h3>Stated limitations</h3>
+    <p>Only applies to models that act as genuine density estimators (NRE, flow-based NPE) — not directly usable, out of the box, for models that only support sampling without density evaluation (GANs, score/diffusion-based models, VAEs); a sampling-based relaxation is named as future work. Also not yet evaluated in high-dimensional parameter spaces.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Read <a href="sbc.html">sbc.html</a> and <a href="trustcrisis.html">trustcrisis.html</a> first. Those two papers give you a way to <em>check</em>, after training, whether a model's confidence is trustworthy. This paper asks: what if the model got graded on that check <em>during</em> training, so it learns to be trustworthy in the first place, instead of getting caught being wrong afterward?</p>
+
+    <h4>1. Turning a report card into part of the exam</h4>
+    <p>Imagine a student who's only ever graded on getting the right final answer, never on showing believable work. Now imagine adding a second grade: "how honest were you about how sure you were?" — and making that count toward the final score too. That's roughly what this paper does to a neural network: alongside the usual "did you predict correctly" loss, it adds a second loss that specifically punishes the network for being overconfident, computed using the exact same rank-based check from the SBC and Trust Crisis papers.</p>
+
+    <h4>2. Only punishing one kind of mistake, on purpose</h4>
+    <p>A key design choice worth understanding: the penalty is asymmetric. Being too cautious (admitting more uncertainty than strictly necessary) isn't punished at all — only being overconfident is. That mirrors exactly the "wrongly excluding the truth is dangerous, being extra careful is basically fine" argument from the Trust Crisis paper, just now built directly into the math the network is trained against, rather than left as a philosophical preference to hope the network happens to satisfy.</p>
+
+    <h4>3. Why this was technically hard to build, not just a good idea</h4>
+    <p>The rank-based calibration check involves operations — sorting, counting how many things fall above or below a threshold — that don't naturally support the kind of smooth, gradual "nudge this a little" feedback neural network training needs (backpropagation). Getting a genuinely useful training signal out of a fundamentally "yes or no, in or out" kind of check required some real engineering: smoothing out the counting step, making the sorting step trainable, and finding a workaround for the fact that one of the two model types (NRE) can't be nudged through its own sampling process the normal way. None of these individual fixes were invented by this paper — the contribution is assembling them into one working pipeline.</p>
+
+    <h4>4. Aiming for "safely wrong" instead of "perfectly right," and explaining why that's the smarter target</h4>
+    <p>The paper tried the more ambitious version too — training the network to be exactly, precisely calibrated at every confidence level, not just conservative — and it didn't work as cleanly: the result was overconfident in some places and overcautious in others, roughly canceling out on average while still being wrong locally, and it came at a real cost to how informative the model's answers were. Rather than hide this, the paper reports it directly and explains the reasoning: aiming for the achievable, sufficient goal (never dangerously overconfident) beats chasing the harder, more fragile goal (exactly right everywhere) when the harder goal doesn't reliably pay off.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>Worth explicitly comparing this paper's approach to <a href="metabeta.html">metabeta</a>'s and <a href="effortless.html">NPE-PFN</a>'s calibration fixes once all three are fresh: those two apply corrections <em>after</em> training (importance sampling, conformal prediction) — this paper bakes the correction into training itself instead. Three different points on the same spectrum (fix it during training vs. fix it afterward), each with its own trade-offs worth weighing directly against each other rather than assuming one approach is simply better.</p>
     <!-- DISCUSSION:END -->
   </section>
 
