@@ -42,14 +42,54 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>The system starts from a human research goal</h3>
+    <p>Co-Scientist is a Gemini-based multi-agent system for generating and refining scientific hypotheses. A scientist supplies the problem, constraints, relevant evidence, and desired properties of a solution. The system searches literature, proposes hypotheses and protocols, critiques them, and returns a ranked research overview. Scientists can steer the run and choose what reaches the laboratory.</p>
+
+    <h3>Generate, debate, rank, evolve</h3>
+    <p>A supervisor allocates work to six specialized roles: Generation, Reflection, Ranking, Evolution, Proximity, and Meta-review. Candidate hypotheses compete in pairwise tournaments. Reviews identify weaknesses, evolution agents revise or combine promising ideas, and persistent memory carries lessons into later rounds. This turns extra inference-time compute into a wider and more iterative search over hypotheses.</p>
+
+    <h3>Tool access matters</h3>
+    <p>Search is not a cosmetic addition. In an ablation on already published ideas, the Reflection agent without search gave them an average novelty score of 6.14 out of 10. With search, that fell to 2.38, the direction we want for known prior art. Other ablations report gains from scientific-debate prompts, evolutionary revision, and meta-review, although several of these measurements rely on the system's own evaluators.</p>
+
+    <h3>Three kinds of evaluation</h3>
+    <p>The paper combines internal tournament scores, blinded expert judgments, and wet-lab tests. Across 203 research goals, later candidates received higher internal Elo ratings. On 11 expert-evaluated biomedical goals, Co-Scientist was preferred to the compared base models and averaged 3.64 for novelty and 3.09 for impact on five-point scales. The authors are careful to call these subjective ratings, not ground truth.</p>
+
+    <h3>The laboratory evidence is promising but preliminary</h3>
+    <p>For acute myeloid leukemia, experts selected system proposals for cell-line testing. KIRA6 inhibited several AML lines and showed an 18-fold IC50 separation between KG-1a cells and the non-AML TK6 control, while two of three novel single-agent candidates had little effect in the tested MOLM-13 line. Several proposed drug combinations showed synergy in one AML line but mixed or antagonistic responses in another. These are useful preclinical signals, not evidence of patient benefit.</p>
+
+    <h3>Other validations test different claims</h3>
+    <p>In liver fibrosis, Co-Scientist proposed epigenetic targets that were tested in human hepatic organoids. In antimicrobial resistance, it independently recovered a gene-transfer mechanism that collaborators had discovered but not yet published. The first cases test whether proposals lead to useful experiments. The last tests whether the system can infer a hidden result. They should not be treated as the same kind of novelty evidence.</p>
+
+    <h3>This is scientist-in-the-loop discovery</h3>
+    <p>Experts defined each goal, reviewed outputs, selected candidates, and conducted the experiments. The paper estimates less than an hour to frame the AML combination task and roughly three hours to review its results. Co-Scientist therefore fits the survey's task-autonomy level better than a fully independent scientist. The authors describe direct laboratory integration and learning from experimental feedback as future work.</p>
+
+    <h3>Limits that affect the headline</h3>
+    <p>The system can miss paywalled prior art and unpublished negative results, inherit errors from the literature, hallucinate, and steer research toward similar ideas. Experimental validation covers a small set of expert-selected biomedical cases. The full code and infrastructure are not public, which limits independent reproduction even though pseudocode and prompts are provided.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. It searches over explanations, not just sentences</h4>
+    <p>A normal model may produce one polished answer. Co-Scientist keeps a population of possible answers and makes them compete. Reviewers attack weak evidence and novelty claims. Evolution agents revise survivors. The useful idea is not that a debate resembles a human lab meeting. It is that the system preserves alternatives and spends more compute before settling.</p>
+
+    <h4>2. Its score is partly inside its own loop</h4>
+    <p>The tournament's Elo rating measures which hypothesis the system's ranking process prefers. Rising Elo shows that the loop optimizes its evaluator. It does not by itself show that later hypotheses are truer. Blinded experts and experiments provide stronger checks, but their samples are much smaller.</p>
+
+    <h4>3. Wet-lab validation changes the quality of the claim</h4>
+    <p>Testing a proposal in cells is more informative than asking another model whether it sounds novel. It can expose a confident but inactive candidate, as happened for some proposals. Yet a cell-line effect is an early rung on the evidence ladder. Animal models, mechanism studies, safety work, and clinical trials remain between that result and a treatment.</p>
+
+    <h4>4. The human contribution is part of the method</h4>
+    <p>The experts supplied problem framing, tacit knowledge, candidate triage, and experimental execution. That does not make the system uninteresting. It tells us where the acceleration occurs: literature-scale ideation and structured comparison, followed by focused human judgment.</p>
+
+    <h3>Connection to the autonomy survey</h3>
+    <p>Co-Scientist has several foundations from the prior paper: planning, search tools, memory, multiple roles, and evolutionary improvement. But it does not run the whole discovery cycle alone. Its real achievement is a well-developed hypothesis engine connected to expert validation. Calling it a collaborator is supported; calling it a replacement for an autonomous laboratory would go beyond the evidence.</p>
+
+    <h3>The key takeaway</h3>
+    <p>The paper's strongest lesson is methodological. Scientific agents need competing hypotheses, active prior-art checks, explicit criticism, and contact with experiments. More inference-time compute can improve the search, but only external evidence can tell us whether the search found science rather than a better-scoring story.</p>
     <!-- DISCUSSION:END -->
   </section>
 
