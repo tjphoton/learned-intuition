@@ -42,14 +42,43 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>The optimization state is written into a meta-prompt</h3>
+    <p>Optimization by PROmpting (OPRO) gives an LLM a natural-language problem description plus earlier candidate solutions and their objective values. The model proposes new candidates, an external evaluator scores them, and the scored candidates return to the next prompt. There is no fitted probabilistic surrogate or explicit uncertainty estimate. The language model itself acts as the proposal mechanism.</p>
+
+    <h3>OPRO is deliberately a simple iterative baseline</h3>
+    <p>The method sorts prior solutions by score and instructs the optimizer LLM to produce something different and better. Multiple candidates per step improve stability. This uses the model's pattern recognition and domain knowledge without training or gradients, but context length limits how much search history it can retain.</p>
+
+    <h3>The mathematical examples test mechanism, not state-of-the-art optimization</h3>
+    <p>On small linear-regression and traveling-salesperson instances, stronger LLMs can infer useful update patterns and sometimes match hand-designed heuristics. The authors explicitly state that OPRO is not intended to beat gradient methods on continuous optimization or specialized solvers on classical combinatorial problems. These experiments show that scores in context can steer generation.</p>
+
+    <h3>Prompt optimization is the main application</h3>
+    <p>The decision variable is a natural-language instruction and the objective is task accuracy on a small training set. This is a search space where an LLM has a meaningful prior and ordinary numeric BO needs an embedding or kernel. OPRO finds prompts that improve over human baselines by up to 8 percentage points on GSM8K and up to 50 points on some Big-Bench Hard tasks.</p>
+
+    <h3>The memorable prompt is evidence and a warning</h3>
+    <p>For PaLM 2-L on GSM8K, "Take a deep breath and work on this problem step-by-step" reaches 80.2% test accuracy versus 71.8% for "Let's think step by step." Different optimizer and scorer models favor different styles. This demonstrates real prompt sensitivity, but it does not reveal a stable causal reason that the wording works.</p>
+
+    <h3>Generalization is checked, but selection bias remains a concern</h3>
+    <p>Optimized instructions transfer to held-out examples, other math benchmarks, and in some cases other scorer models. The paper also studies prompt overfitting and meta-prompt ablations. Still, repeated evaluation on small task samples can favor accidental wording, and the method lacks calibrated uncertainty or a principled exploration rule.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>OPRO replaces a numeric acquisition function with a conversation. Show the model what has been tried and how each trial scored, then ask it to propose a better one.</p>
+
+    <h4>1. Language is both the interface and the prior</h4>
+    <p>A prompt is hard to search with ordinary geometry. An LLM already knows that some phrasings are related and can compose new ones. OPRO uses that learned intuition as its search bias.</p>
+
+    <h4>2. The score closes the loop</h4>
+    <p>The LLM does not get to declare success. A separate evaluator assigns the objective value, and only that measured score enters the history. This external check is the method's main guardrail.</p>
+
+    <h4>3. There is no honest measure of "where we do not know"</h4>
+    <p>Classical BO separates predicted value from uncertainty. OPRO has neither quantity explicitly. It may generate diverse options, but diversity is not the same as calibrated exploration.</p>
+
+    <h3>Going deeper: the baseline for LLM-augmented BO</h3>
+    <p>The next papers ask how to keep the LLM's semantic prior while restoring pieces of the BO machinery. <a href="llambo.html">LLAMBO</a> assigns LLMs specific BO roles. <a href="labo.html">LABO</a> accelerates a surrogate-guided loop. <a href="sara.html">Sara</a> lets an agent control an explicit probabilistic backend. OPRO is the clean comparison point: maximum linguistic flexibility, minimum uncertainty structure.</p>
     <!-- DISCUSSION:END -->
   </section>
 
