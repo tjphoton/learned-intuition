@@ -42,14 +42,65 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>Closing the loop: this is tcdbi's own stated future work, realized</h3>
+    <p><a href="tcdbi.html">Müller et al.'s original PFN paper</a> named "using our model for the amortized simulation-based inference setting" as explicit future work. This paper does exactly that — and does it with an off-the-shelf TabPFN checkpoint, never touched or fine-tuned for SBI at all.</p>
+
+    <h3>The core trick: autoregressive factorization turns a univariate tool into a multivariate one</h3>
+    <p>TabPFN is natively a <em>univariate</em> conditional density estimator — given in-context data, it predicts a distribution over one target value. A posterior p(θ|x_o) over a parameter vector θ ∈ ℝ^{d_θ} needs a joint, multivariate density. The paper's fix is the ordinary chain rule of probability, applied cleverly: p(θ|x_o) ≈ ∏ⱼ q(θʲ | θ^{&lt;j}, x_o, D^{&lt;j}) — predict one parameter dimension at a time, each conditioned on the observation and all previously-predicted dimensions, calling frozen TabPFN once per dimension. No new architecture, no new training — just d_θ repeated calls to a regression model that was never built with this use case in mind. They call the resulting method <strong>NPE-PFN</strong>.</p>
+    <p>The real payoff, stated in the abstract: this "eliminates the need for selecting and training an inference network and tuning its hyperparameters" — the single biggest practical barrier standard SBI methods pose to non-expert users. The trade-off is symmetric and honest: no training cost at all, but inference cost that grows with parameter dimensionality (d_θ evaluations per posterior sample), unlike a trained normalizing flow that samples in one shot.</p>
+
+    <h3>A provably unbiased way past TabPFN's context-size limit</h3>
+    <p>TabPFN's usable in-context size soft-caps around 10⁴ samples, with diminishing (or memory-prohibitive) returns beyond it. The paper proves something sharper than "filtering seems to work empirically": for <em>any</em> non-negative filter function f(x) with f(x_o) &gt; 0, reweighting the joint distribution p(x,θ) by f(x) leaves the posterior p(θ|x_o) completely unchanged at convergence (a two-line normalization argument, Eq. B-1/B-2). This licenses an ABC-style filter — keep only the N_filter simulations nearest to the actual observation — as a <em>provably unbiased</em> way to compress a huge simulation budget down to something TabPFN can actually condition on, not just a heuristic hoped to work. And because NPE-PFN needs no training, this per-observation filtering step doesn't break amortization the way it would for a method that has to retrain its density estimator for every new observation.</p>
+
+    <h3>Sequential refinement without ever training anything</h3>
+    <p>Truncated Sequential NPE (TSNPE) iteratively narrows the prior toward the posterior's high-density region across rounds, refining a trained density estimator each round. Because NPE-PFN has no density estimator to refine, "training becomes redundant" — each round just re-queries frozen TabPFN (<strong>TSNPE-PFN</strong>). The one real cost: checking whether a candidate parameter falls in the current high-density region needs many density evaluations, and running the full autoregressive chain-rule product for each candidate is expensive. The paper's fix is another clean trick — the <strong>"ratio trick"</strong>: sample once from the current NPE-PFN posterior, contrast those samples against uniform draws as a binary classification problem, and use TabPFN's <em>classifier</em> mode (not the autoregressive regressor) to recover the posterior density ratio in a single forward pass via the closed-form Bayes-optimal-classifier relationship — a large speedup over the naive autoregressive approach, especially as dimensionality grows.</p>
+
+    <h3>Results: strongest exactly where it matters — tiny budgets and hard real problems</h3>
+    <ul>
+      <li><strong>Standard SBI benchmark</strong> (Gaussian Linear/Mixture, Two Moons, SLCP, Bernoulli GLM, SIR, Lotka-Volterra; C2ST metric, 0.5 = perfect match): at just 100 simulations, NPE-PFN substantially beats both flow-based NPE and NLE baselines on all but one task. At 10⁵ simulations the plain (unfiltered) variant's advantage disappears, but the <em>filtered</em> variant matches or beats the baselines — filtering specifically is what lets this approach keep scaling. One honest exception: NLE beats NPE-PFN on SLCP ("simple-likelihood-complex-posterior"), because NPE-PFN targets the posterior directly like standard NPE does, inheriting the same relative weakness NPE has on that particular task shape.</li>
+      <li><strong>Calibration</strong>: NPE-PFN's posterior estimates are well-calibrated under simulation-based calibration checks — the same diagnostic Talts et al. formalize in Module 03's <a href="sbc.html">SBC paper</a>.</li>
+      <li><strong>Misspecification robustness</strong>: on a controlled prior/likelihood-misspecification benchmark, both NPE-PFN and standard NPE degrade as misspecification grows (prior misspecification hurts more than likelihood misspecification for both) — but NPE-PFN degrades measurably less, staying more accurate across a broader range of misspecification than trained NPE does.</li>
+      <li><strong>Hodgkin-Huxley single-neuron model</strong> (8 parameters, real electrophysiology recordings from the Allen Cell Types database — a benchmark the literature already flags as genuinely hard): TSNPE-PFN produces posterior predictives closely matching <em>real</em> recordings with just 10⁴ simulations, clearly outperforming standard TSNPE at the same budget.</li>
+      <li><strong>Pyloric network model</strong> (31-dimensional parameter space, 3 neurons × 8 conductances each, a notoriously hard SBI benchmark where 99% of prior draws produce implausible outputs): prior amortized approaches needed 18 <em>million</em> simulations; sequential methods later cut this to 1.5×10⁵. TSNPE-PFN matches or beats those results using <strong>fewer than 5×10⁴</strong> simulations — roughly two to three orders of magnitude fewer than the original amortized approach, on one of the hardest standard benchmarks in the field.</li>
+    </ul>
+
+    <h3>A mechanistic hint for <em>why</em> a borrowed tabular model transfers this well</h3>
+    <p>The paper notes NPE-PFN performs particularly well on tasks with underlying graphical or conditional-dependency structure — structurally similar to the structural causal models TabPFN itself was pretrained on. That's a genuine, testable explanation, not hand-waving: TabPFN's synthetic pretraining prior happens to resemble the structure of many real SBI problems, so the transfer isn't a lucky coincidence so much as a matched inductive bias.</p>
+
+    <h3>Explicit, stated limitations</h3>
+    <ul>
+      <li>Inherits TabPFN's own soft caps: ≤500 features, ≤10⁴ context (filtering and embedding networks help, but imperfectly).</li>
+      <li>As simulation budgets and dimensionality grow, NPE-PFN's advantage over standard trained methods shrinks.</li>
+      <li>High-dimensional <em>observations</em> need a separately pretrained embedding network — which partially undercuts the "no training at all" pitch in exactly that regime.</li>
+      <li>Slower at inference than a trained flow-based NPE, since it pays a per-dimension autoregressive cost that a one-shot flow doesn't.</li>
+      <li>The paper's own honest framing: best suited to exploratory workflows, novice users, and constrained simulation budgets — for large simulation budgets or applications needing very fast sampling with bespoke embeddings (the paper cites real-time astrophysics work as an example), a purpose-trained density estimator may still be the better choice.</li>
+    </ul>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>This one closes a loop that's been open since <a href="tcdbi.html">tcdbi.html</a> and <a href="cranmer.html">cranmer.html</a>: TabPFN was built to fill in a blank cell in a spreadsheet, and a Bayesian posterior over several parameters was never on its original job description. This paper's whole contribution is realizing you can get there anyway, using nothing but the model's existing "fill in one blank" skill, applied repeatedly.</p>
+
+    <h4>1. One blank at a time, in order</h4>
+    <p>Say you need to guess three connected numbers at once — not something TabPFN was built to do directly. But you <em>can</em> ask it to guess the first one, then hand back "here's my first guess" and ask it to guess the second one given that, then hand back both and ask for the third. Chain three ordinary single-blank guesses together, each one informed by the guesses before it, and you've effectively produced one joint guess about all three numbers together — without ever needing a model built to guess three numbers at once. That's the entire trick. It requires zero new training, because "fill in one blank" is exactly what a frozen TabPFN was already good at.</p>
+
+    <h4>2. Why more simulations don't always help, and how to fix that cheaply</h4>
+    <p>TabPFN can only usefully look at so many example rows at once before it stops improving. If a scientist has run a million expensive simulations, feeding all million in isn't just wasteful, it may not even fit. The paper's fix is intuitively obvious once stated — just keep the simulations that <em>look most like</em> the real observation you actually care about, and throw the rest away — but the authors go further and actually prove that doing this doesn't secretly bias your answer, as long as you keep enough "close" examples. That's a real, checkable mathematical guarantee sitting underneath what could otherwise be dismissed as an ad hoc shortcut.</p>
+
+    <h4>3. Getting a "good enough for now" answer fast, without training anything</h4>
+    <p>Some SBI methods refine their guess over several rounds, each round improving a trained model. Here, there's no model to improve — each round just asks the same frozen TabPFN a slightly better-informed question, using progressively narrower simulations. Since checking "is this candidate answer plausible" over and over gets expensive the normal way, the authors add a shortcut: instead of the slow multi-step "guess each number in order" process, reframe the plausibility check as a much simpler yes/no question ("does this look like a real answer, or a random guess?") that TabPFN's ordinary classification mode can answer in one shot.</p>
+
+    <h4>4. The two real-world results that make this more than a clever party trick</h4>
+    <p>On a well-known extremely hard neuroscience benchmark — a circuit of three simulated neurons, where 99 out of 100 random guesses produce nonsense — a method that once needed 18 million simulations to work well can now be matched or beaten using under 50,000. That's not a small speedup; it's the difference between a project that takes a research group weeks of compute and one that fits on a laptop overnight. And on real recordings from actual neurons (not just simulated test cases), this approach produces believable results with far fewer simulations than the standard method needs at the same budget.</p>
+
+    <h4>5. Why does a spreadsheet model happen to be good at this?</h4>
+    <p>Not a coincidence, per the authors: TabPFN was trained on millions of fake datasets generated by randomly wired cause-and-effect diagrams (structural causal models) — and it turns out a lot of real scientific simulators, including the neuron models tested here, have that same "one thing causes another thing causes another thing" shape. The borrowed tool works well specifically because its training diet happens to resemble the kind of problem it's now being asked to solve.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p>Worth holding two comparisons side by side once more of this library is read: NPE-PFN vs. metabeta (Module 02) represent two very different answers to "how do I get a Bayesian posterior without waiting for MCMC" — metabeta trains a purpose-built hierarchical architecture from scratch on a custom simulator; NPE-PFN reuses an existing, off-the-shelf, unrelated model with zero training at all. Different points on a genuine trade-off between customization and effort. And this paper's calibration checks are a direct, hands-on preview of <a href="sbc.html">Talts et al.'s simulation-based calibration</a> methodology, worth revisiting once that paper is read closely — seeing the diagnostic actually applied here first may make the formal paper land more easily.</p>
     <!-- DISCUSSION:END -->
   </section>
 
