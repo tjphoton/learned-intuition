@@ -42,14 +42,54 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>A position paper about system design</h3>
+    <p>The authors do not argue that AI is useless for science. They argue that current agentic systems are co-scientists, not autonomous natural scientists, because their training and evaluation omit several kinds of judgment. Their target is the belief that more model scale and better orchestration will close every remaining gap.</p>
+
+    <h3>Problem selection falls toward what is measurable</h3>
+    <p>The McNamara fallacy describes optimizing what can be quantified while ignoring what cannot. Agent systems work best when data, objectives, and verification are already formal. But choosing whether a field needs ionic conductivity, manufacturability, safety, or a new theory is itself a scientific judgment. A benchmark score cannot decide which bottleneck matters.</p>
+
+    <h3>Published papers omit the knowledge experiments need</h3>
+    <p>Training corpora favor successful conclusions. They rarely record failed syntheses, unreliable suppliers, undocumented protocol adjustments, suspicious measurement shapes, or abandoned hypotheses. The paper distinguishes tacit procedural knowledge from failure knowledge. Both affect what should be tried and when a promising theory should be rejected.</p>
+
+    <h3>Preference training may compress hypothesis diversity</h3>
+    <p>Models are tuned toward outputs that annotators find familiar, coherent, and agreeable. The authors argue that this pushes scientific suggestions toward published consensus. In their “hypothesis hivemind” experiment, six frontier models generated extensions for 50 materials papers. Cross-model embedding similarities remained high even when the task called for diverse new hypotheses.</p>
+
+    <h3>The diversity evidence is suggestive, not decisive</h3>
+    <p>Cosine similarity between text embeddings captures semantic overlap, but it does not directly measure scientific originality or the value of small technical differences. The study covers one workshop track and a particular prompt format. It supports a convergence concern, but broader blinded expert evaluation would be needed to show that multiple models truly offer an effective sample size near one.</p>
+
+    <h3>Benchmarks miss the shape of an investigation</h3>
+    <p>Most scientific benchmarks ask for a correct answer in one turn. Research unfolds across changing questions, competing objectives, anomalies, and costly experiments. The paper cites evidence that scientific agents often ignore new evidence and rarely revise beliefs after refutation. A system can score well without maintaining a coherent model of what it believes or why the next experiment matters.</p>
+
+    <h3>Physical validation is more than a final checkbox</h3>
+    <p>Simulation and prediction results must meet synthesis, measurement, and real-world constraints. A failed physical test should update the computational model, perhaps revealing a missing mechanism. The authors argue that current pipelines often treat each stage as an independent task and lack a persistent epistemic state that can absorb such contradictions.</p>
+
+    <h3>The proposed response changes data and institutions</h3>
+    <p>Recommendations include open reviews and proposal evaluations, machine-readable preregistration of every AI hypothesis before testing, records of failed experiments, annotated laboratory-process data, post-training that preserves disagreement, simulators as scalable verifiers, and persistent world models over hypotheses and evidence. These are research directions, not demonstrated solutions.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. Solving a question is not choosing the question</h4>
+    <p>A system may search millions of candidates once people define a target. Science also asks whether the target is the right one, what tradeoffs it hides, and whether an unexpected observation should change the goal. The paper locates autonomy in those judgments rather than in workflow length.</p>
+
+    <h4>2. A paper is a filtered record</h4>
+    <p>Published prose usually explains the path that worked. It removes the messy knowledge that let researchers recognize contamination, distrust a clean curve, or stop pursuing a dead end. Training only on papers teaches the visible result but not the craft that made it credible.</p>
+
+    <h4>3. Consensus is useful until the anomaly is right</h4>
+    <p>Most of the time, respecting established knowledge prevents nonsense. Breakthroughs sometimes begin with evidence that established knowledge says should not exist. An autonomous scientist needs a calibrated way to protect anomalies long enough to test them, not automatic novelty for its own sake.</p>
+
+    <h4>4. Verification must change the agent</h4>
+    <p>Running an experiment is not enough. The result must alter beliefs, uncertainty, priorities, and future experimental design. A persistent world model is the paper's answer to this need. It would make hypotheses and their supporting evidence explicit rather than leaving the whole investigation in transient text.</p>
+
+    <h3>How this reframes the papers before it</h3>
+    <p>Co-Scientist, Robin, and the AI Scientist systems do useful work after people supply goals and environments. AgentRxiv adds cumulative memory but also risks accumulating false reports. This paper explains why those systems look strongest as collaborators and in well-scored computational spaces. It also asks us to judge them by belief revision and physical feedback, not by paper production.</p>
+
+    <h3>The key takeaway</h3>
+    <p>Autonomous discovery is not simply the sum of literature search, code, tools, and manuscript writing. It requires judgment about what matters, access to failed and tacit knowledge, protected diversity, and a durable capacity to be proven wrong. Whether every proposed remedy works remains open, but the diagnostic standard is useful now.</p>
     <!-- DISCUSSION:END -->
   </section>
 
