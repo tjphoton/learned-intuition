@@ -57,13 +57,124 @@
       <li><strong>Opening the simulator's black box</strong> — two sub-threads: <strong>probabilistic programming</strong> (writing the simulator so the inference engine can control every random draw inside it, not just its final output — enabling inference on the full latent trajectory z, not just θ) and <strong>extracting extra quantities</strong> from the simulator's internals to supervise a surrogate more efficiently than raw (θ,x) pairs alone (the "mining gold" thread — see below).</li>
     </ul>
 
-    <h3>The workflow taxonomy: use the simulator directly, or build a surrogate</h3>
-    <p>Fig. 1 in the paper lays out eight concrete workflows (A–H), splitting into two families:</p>
+    <h3>The workflow taxonomy, precisely: Figure 1's eight panels</h3>
+    <p>Figure 1 lays out eight concrete workflows, A through H, and the single most important thing it encodes visually is <em>where the "data" box plugs in</em>. In panels A–D, the real observation sits inside the loop, consulted on every iteration. In panels E–H, it plugs in only once, at the very last step, after an entire simulate-and-train phase has already finished using nothing but simulated data. That one difference — not the acronyms, not the shape of the boxes — is what "amortized" actually means, drawn as a picture instead of stated as a claim.</p>
+
+    <h4>Family 1 (A–D): using the simulator directly</h4>
+    <figure class="fig1-diagram">
+      <svg viewBox="0 0 780 320" role="img" aria-label="Diagram of the A-through-D family: a proposal draws parameters theta, the simulator produces simulated data, that simulated data is compared against the real observation, and on every iteration the loop repeats — the real data box sits inside the loop.">
+        <defs>
+          <marker id="arrowA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <rect x="30" y="120" width="90" height="44" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="75" y="146" text-anchor="middle" font-size="13">prior</text>
+        <rect x="165" y="120" width="115" height="44" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="222" y="146" text-anchor="middle" font-size="13">proposal</text>
+        <rect x="325" y="120" width="120" height="44" rx="8" fill="var(--sbi-wash)" stroke="var(--sbi)" stroke-width="1.7"/>
+        <text x="385" y="146" text-anchor="middle" font-size="13">simulator</text>
+        <rect x="490" y="120" width="110" height="44" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="545" y="146" text-anchor="middle" font-size="13">compare</text>
+        <rect x="645" y="120" width="105" height="44" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="697" y="146" text-anchor="middle" font-size="13">posterior</text>
+        <rect x="490" y="220" width="110" height="44" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.8"/>
+        <text x="545" y="238" text-anchor="middle" font-size="12.5">data</text>
+        <text x="545" y="252" text-anchor="middle" font-size="9" fill="var(--muted)">(real observation)</text>
+        <line x1="120" y1="142" x2="163" y2="142" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowA)"/>
+        <line x1="280" y1="142" x2="323" y2="142" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowA)"/>
+        <text x="301" y="132" text-anchor="middle" font-size="11.5">θ</text>
+        <text x="301" y="112" text-anchor="middle" font-size="9" fill="var(--muted)">(θ, z for C / D)</text>
+        <line x1="445" y1="142" x2="488" y2="142" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowA)"/>
+        <text x="466" y="132" text-anchor="middle" font-size="10.5">x_sim</text>
+        <line x1="545" y1="218" x2="545" y2="166" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowA)"/>
+        <line x1="600" y1="142" x2="643" y2="142" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowA)"/>
+        <text x="621" y="132" text-anchor="middle" font-size="9.5" fill="var(--muted)">accept?</text>
+        <path d="M545,118 C545,38 222,38 222,118" fill="none" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowA)"/>
+        <text x="383" y="30" text-anchor="middle" font-size="10.5" fill="var(--muted)">repeat: propose the next θ — and re-run this whole loop for every new dataset</text>
+        <path d="M488,238 C400,300 280,300 224,166" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrowA)"/>
+        <text x="356" y="298" text-anchor="middle" font-size="9.5" fill="var(--muted)">D only: proposal reads the real data directly ("inference compilation")</text>
+      </svg>
+      <figcaption>Panels A–D: the real observation (data) is consulted <em>inside</em> the loop, every iteration. A new dataset means running the whole loop again from scratch.</figcaption>
+    </figure>
+    <p>Walked through with a concrete example — reuse the epidemic simulator from the walkthrough above: θ = how contagious the disease is, x = the daily case-count curve it produces:</p>
     <ul>
-      <li><strong>Using the simulator directly during inference (Fig. 1 A–D, not amortized):</strong> ABC with Monte Carlo sampling; ABC with learned summary statistics; probabilistic programming with MCMC; probabilistic programming with a learned proposal ("inference compilation"). The inference engine compares simulator output to data every time.</li>
-      <li><strong>Building an amortized surrogate (Fig. 1 E–H):</strong> train a neural network once, upfront, to stand in for the <strong>likelihood</strong> (E), the <strong>posterior</strong> (F), or the <strong>likelihood ratio</strong> (G) — the same three-way split later papers in this library standardize as NPE / NLE / NRE, though this paper itself never uses those acronyms; it describes the three targets in prose. Panel H adds surrogates trained on <em>augmented</em> data mined from the simulator's internals.</li>
+      <li><strong>A — ABC with Monte Carlo sampling.</strong> Draw a candidate θ (say, 0.4) from the prior. Feed it to the simulator, which plays out a month of the epidemic and produces a simulated curve x_sim. Compare x_sim directly to the real case-count curve (data). Close enough → keep θ=0.4 as a plausible sample. Not close enough → discard it. Draw the next candidate (θ=0.6) and repeat, thousands of times. The kept θ's are the posterior. Data is consulted on <em>every single</em> iteration.</li>
+      <li><strong>B — ABC with learned summary statistics.</strong> Identical loop to A, with one insertion: before comparing, both x_sim and the real data first pass through a learned "summary statistics" step (e.g. total cases, day of peak, week-one growth rate) that compresses each into a handful of numbers. Compare the compressed versions instead of the raw curves — cheaper and more reliable in high dimensions, same loop otherwise.</li>
+      <li><strong>C — Probabilistic programming with Monte Carlo sampling.</strong> Same shape as A, but the proposal now controls the simulator's internal randomness too (the arrow carries θ <em>and</em> z) — not just "how contagious," but which specific household got infected first, which contact chains fired. This lets you recover the full hidden story behind one observed curve, not just the contagiousness parameter, at the cost of needing a simulator built to expose that control (the "augmented simulator").</li>
+      <li><strong>D — Probabilistic programming with inference compilation.</strong> Same as C, but the proposal box additionally reads the real data directly (the dashed arrow in the diagram above) — a small trained network learns to propose (θ,z) candidates likely to reproduce something like the actual observed curve, instead of guessing blindly from the prior. An importance-sampling correction at the end accounts for the fact the proposal is no longer sampling purely from the prior. This is the first hint of "amortize something" appearing inside the otherwise non-amortized family — but only the proposal step reuses across calls; the simulator still has to run and compare for every candidate, live, for every new dataset.</li>
     </ul>
-    <p>The likelihood-ratio surrogate (Fig. 1G) is trained via a genuinely elegant reduction, explicitly named here as the <strong>"likelihood-ratio trick"</strong>: instead of estimating a ratio of two hard densities directly, train an ordinary classifier to discriminate simulated data generated at parameter point θ₀ from data generated at θ₁ — a direct application of the Neyman–Pearson lemma, and structurally the same move as a GAN discriminator.</p>
+
+    <h4>Family 2 (E–H): building an amortized surrogate</h4>
+    <figure class="fig1-diagram">
+      <svg viewBox="0 0 900 320" role="img" aria-label="Diagram of the E-through-H family: proposal, simulator, and learning run once upfront using only simulated data, producing a surrogate. A dashed amortization boundary separates that upfront phase from a fast inference step that the real data only touches once, on the far side of the boundary.">
+        <defs>
+          <marker id="arrowB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <rect x="30" y="130" width="110" height="44" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="85" y="156" text-anchor="middle" font-size="13">proposal</text>
+        <rect x="175" y="130" width="110" height="44" rx="8" fill="var(--sbi-wash)" stroke="var(--sbi)" stroke-width="1.7"/>
+        <text x="230" y="156" text-anchor="middle" font-size="13">simulator</text>
+        <rect x="320" y="130" width="120" height="44" rx="8" fill="var(--bo-wash)" stroke="var(--bo)" stroke-width="1.7"/>
+        <text x="380" y="150" text-anchor="middle" font-size="12.5">learning</text>
+        <text x="380" y="163" text-anchor="middle" font-size="9" fill="var(--muted)">(fit surrogate)</text>
+        <rect x="475" y="130" width="130" height="44" rx="8" fill="var(--agentic-wash)" stroke="var(--agentic)" stroke-width="1.7"/>
+        <text x="540" y="150" text-anchor="middle" font-size="12.5">surrogate</text>
+        <text x="540" y="163" text-anchor="middle" font-size="8.5" fill="var(--muted)">p̂(x|θ) / p̂(θ|x) / ratio</text>
+        <line x1="630" y1="20" x2="630" y2="300" stroke="currentColor" stroke-width="1.4" stroke-dasharray="5 4"/>
+        <text x="630" y="14" text-anchor="middle" font-size="10.5">amortization boundary</text>
+        <text x="380" y="300" text-anchor="middle" font-size="10" fill="var(--muted)">upfront — simulated data only, runs once</text>
+        <text x="775" y="300" text-anchor="middle" font-size="10" fill="var(--muted)">every real dataset — fast, runs every time</text>
+        <rect x="650" y="60" width="90" height="40" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="695" y="84" text-anchor="middle" font-size="13">prior</text>
+        <rect x="650" y="130" width="120" height="44" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="710" y="150" text-anchor="middle" font-size="12">inference /</text>
+        <text x="710" y="163" text-anchor="middle" font-size="12">evaluate</text>
+        <rect x="650" y="220" width="120" height="44" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.8"/>
+        <text x="710" y="238" text-anchor="middle" font-size="12.5">data</text>
+        <text x="710" y="252" text-anchor="middle" font-size="9" fill="var(--muted)">(real observation)</text>
+        <rect x="805" y="130" width="90" height="44" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="850" y="156" text-anchor="middle" font-size="13">posterior</text>
+        <line x1="140" y1="152" x2="173" y2="152" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowB)"/>
+        <text x="157" y="142" text-anchor="middle" font-size="11">θ</text>
+        <line x1="285" y1="152" x2="318" y2="152" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowB)"/>
+        <text x="301" y="142" text-anchor="middle" font-size="10.5">x</text>
+        <path d="M85,174 C85,215 380,215 380,176" fill="none" stroke="currentColor" stroke-width="1.2" marker-end="url(#arrowB)"/>
+        <text x="232" y="212" text-anchor="middle" font-size="9" fill="var(--muted)">θ also feeds learning directly (surrogate is conditioned on θ)</text>
+        <line x1="440" y1="152" x2="473" y2="152" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowB)"/>
+        <line x1="605" y1="152" x2="648" y2="152" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrowB)"/>
+        <line x1="695" y1="102" x2="695" y2="128" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowB)"/>
+        <line x1="710" y1="218" x2="710" y2="176" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowB)"/>
+        <line x1="770" y1="152" x2="803" y2="152" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowB)"/>
+        <path d="M535,128 C535,55 85,55 85,128" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrowB)"/>
+        <text x="310" y="47" text-anchor="middle" font-size="9.5" fill="var(--muted)">optional active learning — still upfront, before the boundary</text>
+        <text x="380" y="118" text-anchor="middle" font-size="9" fill="var(--muted)">H only: augmented simulator also outputs t(x,z), r(x,z) as extra training signal</text>
+      </svg>
+      <figcaption>Panels E–H: the real observation touches only the single arrow crossing the dashed boundary — the entire simulate-and-fit stage to its left runs once, using only simulated data, and never has to repeat for a new dataset.</figcaption>
+    </figure>
+    <p>Same running example, walked through for each panel:</p>
+    <ul>
+      <li><strong>E — Amortized likelihood.</strong> Long before the real case-count data is even looked at: draw thousands of θ's from the prior, simulate a curve x for each, and train a density estimator on all those (θ,x) pairs to learn "for any θ, what does the distribution of possible curves look like?" That produces a fast, callable stand-in likelihood p̂(x|θ). Only afterward, at actual inference time, plug in the real observed curve and the prior to get confidence sets or a posterior. This is precisely the classical technique behind the Higgs boson discovery — detailed below.</li>
+      <li><strong>F — Amortized posterior.</strong> Same upfront training loop as E, but the network learns p̂(θ|x) directly instead of the likelihood — since the training pairs were drawn θ~prior, the prior is already baked in. At inference time there's no separate combination step: just evaluate the trained network at the real curve and read off the posterior. This is exactly what later papers in this library call NPE.</li>
+      <li><strong>G — Amortized likelihood ratio.</strong> Same shape again, but "learning" here is a <em>classifier</em> (supervised, generally an easier problem than density estimation), trained to tell apart real matched (θ,x) pairs from randomly mismatched ones. This is the <strong>"likelihood-ratio trick,"</strong> explicitly named in the paper: a direct application of the Neyman–Pearson lemma, structurally identical to a GAN's discriminator. The classifier's output converts algebraically into an approximation of the likelihood ratio, which then needs the prior plus typically an MCMC step to produce a full posterior.</li>
+      <li><strong>H — Amortized surrogates trained with augmented data.</strong> Same shape as G, but during the upfront simulation phase the (now "augmented") simulator also exposes extra internal quantities — the score t(x,z) and the joint likelihood ratio r(x,z) — as a free byproduct of running it. Training on "x, plus these bonus numbers" needs measurably fewer total simulations to reach the same accuracy than training on x alone. This is the "mining gold" thread, detailed further below.</li>
+    </ul>
+
+    <h4>A–D vs. E–H — the difference that actually matters</h4>
+    <p>Beyond "one loops, one doesn't," the paper spells out concrete, practical consequences of the choice:</p>
+    <ul>
+      <li><strong>What you get back.</strong> A–D hands you <em>samples</em> from the posterior (accepted θ's from ABC, or an MCMC chain) — a snapshot, not a reusable object. E–H hands you a <em>function</em> — call it again for a different θ or a different x and it just answers, instantly, no new simulations needed.</li>
+      <li><strong>What you can infer.</strong> A–D's probabilistic-programming branch (C, D) can recover the full hidden latent story z, not just θ — a real interpretability advantage surrogate-based methods (E–H) don't have, since a surrogate only ever learns the relationship between θ and the final x, never the path in between.</li>
+      <li><strong>When the upfront cost pays off.</strong> The paper is explicit: density-estimation-based inference (E) "is particularly well suited for problems with many i.i.d. observations" — pay the training cost once, then evaluate cheaply across every one of many similar datasets. A–D pays its (typically lower) per-call cost, but pays it again, in full, for every new dataset — fine for a single one-off analysis, punishing at scale.</li>
+      <li><strong>What can go wrong.</strong> A–D's honest failure mode is the curse of dimensionality on hand-built summary statistics (shared with classical ABC). E–H's honest failure mode is the "amortization gap" — since the surrogate is only ever an approximation, and it commits upfront to a fixed set of "parameters of interest" it was trained to marginalize over.</li>
+    </ul>
+
+    <h4>Why Figure 1E is literally the Higgs boson technique</h4>
+    <p>This is one of the more striking sentences in the whole paper, easy to read past too quickly: "This approach was used for the discovery of the Higgs boson in a frequentist paradigm and is illustrated in Fig. 1E." Not "resembles" or "is analogous to" — <em>is</em>. Here's what that means concretely.</p>
+    <p>Physicists had (and have) an extremely detailed simulator of particle collisions: given a hypothesized Higgs mass θ and a set of background-physics parameters, it can generate a plausible collision event, all the way down to what the detector would record. Before the LHC ever produced usable data, physicists ran this simulator millions of times across a wide range of hypothesized θ values, and — crucially, this is a <em>classical</em> version of panel E, not a neural one — fit a density estimate (histograms or kernel density estimation, the paper is explicit: "replacing the green learning step with a classical density estimation method") to the distribution of a summary statistic (such as the invariant mass of decay products) <em>for each hypothesized θ</em>. That produced a stand-in likelihood p̂(summary statistic | θ), built entirely from simulation, finished before a single real collision event was examined.</p>
+    <p>Only then did the real LHC data enter the picture — and the reason this specific approach was the right tool for that specific problem is exactly the amortization property panel E is built to show: the LHC produces an enormous number of essentially independent, identically distributed collision events. Because the trained stand-in likelihood could be evaluated instantly and repeatedly, without re-simulating anything, physicists could cheaply evaluate it against millions of real events and run the standard frequentist machinery (a likelihood-ratio test statistic, comparing the "Higgs at 125 GeV" hypothesis against "no Higgs") to determine how surprising the observed bump in the data was under the null. The paper names this directly: this amortization property is "a key reason for its widespread use in particle physics measurements" — the 2012 Higgs discovery being the most famous instance. The neural version of the same diagram (swap the classical density estimator for a normalizing flow) is what the rest of this reading order calls NLE — same picture, newer technology filling the green box.</p>
 
     <h3>Mining gold: extracting more than samples from the simulator's internals</h3>
     <p>The paper lists six quantities, beyond the plain output x, that a simulator might expose if you're willing to open it up: the tractable final-step density p(x|z,θ); the joint score t(x,z|θ) = ∇_θ log p(x,z|θ); the latent-space gradient ∇_z log p(x,z|θ); the joint likelihood ratio r(x,z|θ,θ') = p(x,z|θ)/p(x,z|θ'); and two further derivatives. Where available (often via automatic differentiation), these can augment ordinary supervised training and dramatically improve sample efficiency for surrogate models — this is Cranmer/Brehmer's own "mining gold" line of work.</p>
