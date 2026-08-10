@@ -42,14 +42,46 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>The problem: simulators you can sample but not evaluate</h3>
+    <p>Across physics, astronomy, epidemiology, and increasingly economics, the scientific model of a system is a <strong>mechanistic simulator</strong>: give it parameters θ, and it stochastically generates realistic data x — often via a long chain of latent steps (particle showers, detector response, population dynamics). You can run it forward as many times as you like. What you almost never have is a closed-form likelihood p(x|θ) you can evaluate — the randomness is buried too deep in the simulation code. This is the <strong>likelihood-free</strong> or <strong>simulation-based inference</strong> problem, and it's the umbrella every later paper in this library sits under.</p>
+
+    <h3>The classical baseline: Approximate Bayesian Computation (ABC)</h3>
+    <p>The traditional fix: simulate many (θ, x) pairs, keep only the ones whose simulated x is "close enough" to the real observation (usually measured via hand-picked summary statistics and a distance threshold), and treat the surviving θ's as approximate posterior samples. It works, but it degrades badly as dimensionality grows — good summary statistics get harder to design, and the acceptance rate collapses, so most of the simulation budget is wasted on rejected draws.</p>
+
+    <h3>The frontier: three neural strategies</h3>
+    <p>The paper's core contribution is a taxonomy of what a neural network can be trained to directly approximate, using simulated (θ, x) pairs as supervision instead of hand-built summary statistics:</p>
+    <ul>
+      <li><strong>Neural Posterior Estimation (NPE)</strong> — train a conditional density estimator (e.g. a normalizing flow) to directly output p(θ|x). This is the lineage metabeta and BayesFlow sit in: train once, amortize, get a posterior in one forward pass for any new x.</li>
+      <li><strong>Neural Likelihood Estimation (NLE)</strong> — train a surrogate for p(x|θ) itself, then plug that surrogate into standard MCMC or variational inference in place of the intractable true likelihood.</li>
+      <li><strong>Neural Ratio Estimation (NRE)</strong> — train a classifier to distinguish samples drawn from the joint p(x,θ) versus the product of marginals p(x)p(θ); the trained classifier's output recovers the likelihood ratio, which is enough to drive inference without ever modeling a full density.</li>
+    </ul>
+    <p>Every later paper in the library is a specialization of one of these three. Naming this taxonomy up front is exactly why this paper is tagged "read first" — without it, "amortized inference," "neural posterior estimation," and "prior-data fitted network" read as three unrelated ideas instead of the same move made by three different research communities.</p>
+
+    <h3>Sequential / active variants: don't waste simulations</h3>
+    <p>A plain (amortized) NPE/NLE/NRE trains on parameters drawn broadly from the prior — including regions nowhere near the true value that generated the observed data. The paper covers <strong>sequential</strong> variants (SNPE, SNLE, SNRE) that iteratively refine the proposal distribution toward the region of parameter space consistent with the actual observation, trading away some amortization (you're now tuned to one observation) for much better simulation efficiency when simulations are expensive.</p>
+
+    <h3>Mining the simulator for more than just samples</h3>
+    <p>When the simulator's internals are accessible (not just a black box), you can sometimes extract extra training signal — e.g. a joint likelihood ratio or a score — directly from the simulation code, and use it to supervise the neural surrogate more efficiently than raw (θ, x) pairs alone would allow. This "mining gold from the simulator" thread is one of Cranmer/Brehmer's own contributions and shows up as a recurring theme: exploit whatever structure the simulator gives you for free.</p>
+
+    <h3>Diagnostics — the seed of the trust-crisis thread</h3>
+    <p>The paper is explicit that a trained neural surrogate can be wrong in ways that are hard to detect from the fit alone, and flags the need for calibration diagnostics as an open, essential problem — not a footnote. This is the direct ancestor of <a href="sbc.html">Talts et al.'s simulation-based calibration</a> and <a href="trustcrisis.html">Hermans et al.'s "Trust Crisis"</a> later in Module 03; the concern that amortized posteriors can look plausible while being overconfident is already named here in 2020, years before it became its own literature.</p>
+
+    <h3>Why this is "shared vocabulary" for the whole library</h3>
+    <p>Read as the entry point, this paper hands you the vocabulary every other paper assumes: likelihood-free inference, the NPE/NLE/NRE split, amortization vs. sequential refinement, and the calibration concern. metabeta is an NPE method with hierarchical structure bolted on; TabPFN is an NPE method reframed as in-context learning on tables; Do-PFN/CausalPFN extend NPE to interventional queries. None of that reads as a family without this paper first.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Why "frontier" and not "introduction"?</h3>
+    <p>The title is doing real work: this isn't a tutorial for beginners, it's a snapshot of where a maturing subfield (likelihood-free inference in physics) had gotten to by 2020, written for scientists in other fields who already have a simulator and want to know what's now possible beyond ABC. That's why it reads as a survey of live research directions (sequential methods, mining gold, diagnostics) rather than a single clean algorithm.</p>
+
+    <h3>NPE vs. NLE vs. NRE — which one do later papers pick, and why?</h3>
+    <p>Worth tracking as we go: metabeta and BayesFlow default to NPE (direct posterior, normalizing flows) because amortization — one trained network reused across many datasets of the same shape — is the whole value proposition for a portfolio use case like MMM. NRE tends to show up when the discriminative/classifier framing is more natural (e.g. simulation-vs-real detectors). Watch for which choice each subsequent paper makes and whether they justify it.</p>
+
+    <h3>Open question to carry forward</h3>
+    <p>The paper flags calibration as unresolved. By the time we get to Hermans et al. (2022) in Module 03, the answer is: it's worse than flagged here — essentially all benchmarked SBI algorithms produce overconfident posteriors in at least one setting, especially at small simulation budgets. Worth re-reading this paper's diagnostics section after Module 03 to see how much of that was already anticipated versus genuinely surprising.</p>
     <!-- DISCUSSION:END -->
   </section>
 

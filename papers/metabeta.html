@@ -42,14 +42,45 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>The problem: hierarchical data, intractable posteriors</h3>
+    <p>Hierarchical (clustered) data — students within schools, patients within clinics, brands within a portfolio — is standard, and mixed-effects models are the standard tool for it: <strong>fixed effects</strong> (β) capture population-wide trends, <strong>random effects</strong> (αᵢ) capture group-specific deviations. The Bayesian version gives you uncertainty on both, but the posterior is analytically intractable, so in practice you reach for HMC — accurate, but minutes-to-hours per dataset, re-run from scratch every time the dataset changes.</p>
+
+    <h3>The solution: amortize it</h3>
+    <p>metabeta applies neural posterior estimation (NPE): train once on thousands of simulated datasets where the ground-truth parameters are known (because they were sampled to generate the data), then reuse that trained network on any new real dataset with the same hierarchical shape — no re-fitting.</p>
+    <ul>
+      <li><strong>Local summary networks</strong> compress the data within each group into an embedding.</li>
+      <li><strong>Global summary networks</strong> aggregate those group embeddings into a population-level summary.</li>
+      <li><strong>Posterior networks</strong> (normalizing flows) map those summaries, plus the prior, to a joint posterior over the regression parameters — split into one network for global parameters and one for group-level random effects.</li>
+    </ul>
+    <p>This architecture is why it's specialized rather than a drop-in for general regression: a model without groups has no need for the local/global split or the dual posterior networks. The nested summarization is built specifically around the mixed-effects factorization.</p>
+
+    <h3>Post-hoc refinement: fighting overconfidence before it ships</h3>
+    <p>Amortized estimators can be slightly miscalibrated out of the box, so metabeta adds two corrections on top:</p>
+    <ul>
+      <li><strong>Importance sampling</strong> — reweights posterior samples using the model's own likelihood to correct for estimator inaccuracy.</li>
+      <li><strong>Conformal prediction</strong> — a distribution-free adjustment to the credible intervals so that, e.g., a reported 95% interval actually contains the true value 95% of the time.</li>
+    </ul>
+    <p>This is the first concrete instance of a theme that recurs through the whole reading list: amortized inference is fast by default but not calibrated by default — see <a href="trustcrisis.html">Hermans et al., "A Trust Crisis in Simulation-Based Inference"</a> for why that gap matters and <a href="sbc.html">Talts et al., simulation-based calibration</a> for the diagnostic used to check it.</p>
+
+    <h3>Performance: HMC accuracy, ~0.01s vs ~37s</h3>
+    <p>Benchmarked against HMC (gold standard) and variational inference, metabeta matches HMC on parameter recovery and model fit across toy, semi-synthetic, and real datasets, while running in roughly 0.01 seconds versus up to 37 seconds for HMC — several orders of magnitude faster. It clearly outperforms VI in most settings.</p>
+
+    <h3>Why it's the dress rehearsal for MMM</h3>
+    <p>A Marketing Mix Model is, structurally, a hierarchical regression with adstock and saturation curves bolted on — same shape as what metabeta targets. Because inference is near-instant, things that are infeasible with MCMC become routine: testing whether the model recovers its own known parameters, running simulation-based calibration across thousands of posteriors, or doing prior-sensitivity analysis across an entire portfolio of brands instead of arguing about priors in a slide. The gap: nobody has actually built the MMM-specific simulator (adstock, saturation, patent cliffs, formulary shocks) that this recipe needs — the tooling and the closest structural analog both exist, the domain application doesn't yet. See Module 05 in the study plan.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Motivation — why not just run HMC every time?</h3>
+    <p>Because the cost is paid per dataset. If you have one brand, one clinic, one experiment, HMC is fine. The moment you have many instances of the <em>same structural model</em> (many brands, many clinics), you're paying the full inference cost redundantly — that redundancy is exactly what amortization sells back to you as speed.</p>
+
+    <h3>Architecture — why two posterior networks instead of one?</h3>
+    <p>Global parameters (population-level fixed effects, variance components) and local parameters (each group's random effect) have different statistical roles and different dimensionality behavior as the number of groups grows. Splitting them lets the global network stay a fixed size while the local network is applied per-group — the design choice that lets the model generalize to portfolios of different sizes without retraining.</p>
+
+    <h3>Open question worth raising when we discuss this live</h3>
+    <p>The paper is scoped to <em>linear</em> mixed-effects regression with a single grouping factor. An MMM needs adstock (a nonlinear carryover transform) and saturation (a nonlinear response curve) on top of the linear regression core — the authors flag scaling to nonlinear problems as future work, not something metabeta does today. Worth tracking whether that extension has appeared since.</p>
     <!-- DISCUSSION:END -->
   </section>
 

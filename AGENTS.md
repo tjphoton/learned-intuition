@@ -93,6 +93,7 @@ grep -rl "Simulation_Bayesian_Research\|Simulation Bayesian Research" . --includ
 - **`repos/*/` (cloned reference implementations) are trimmed to just `README.md`.** The actual code is other people's, easily re-cloned from the URLs in `PAPERS_SUMMARY.md`'s `## Code repositories` table — no need to republish it either. `.gitignore` enforces this: `repos/*/*` is ignored except `repos/*/README.md`.
 - To reconstitute a full local working copy: clone this repo, clone `learned-intuition-library` alongside it (or wherever `papers/*.html`'s links expect it — currently hardcoded to `github.com/tjphoton/learned-intuition-library`), and re-clone each `repos/<name>/` from the URLs in `PAPERS_SUMMARY.md`.
 - Commit messages: describe what changed in the library/curriculum (e.g. "add AlphaLab + Barbarians at the Gate to evolutionary-search module"), not generic "update files."
+- **Commit and push after every local file update in this repo.** Whenever a file here (`index.html`, `papers/*.html`, `PAPERS_SUMMARY.md`, `README.md`, this file, etc.) is edited — e.g. filling in a paper's Study Notes/Discussion after a reading session — commit that change with a scoped message and push to `origin/main` right away, rather than batching edits across a session. Keeps GitHub Pages and the reading-progress record current as papers actually get read.
 - Never force-push. Never rewrite history on this repo without being asked.
 
 ## Working style established in this project (read before making judgment calls)
