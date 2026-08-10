@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>From EGO to Agentic BO — Learned Intuition</title>
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="assets/theme.css">
+<link rel="stylesheet" href="assets/history.css">
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" type="button">
+  <svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
+  <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="display:none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></svg>
+</button>
+
+<div class="wrap">
+  <a class="backlink" href="index.html#part2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 8H3M7 4L3 8l4 4"/></svg>Back to study plan — Part II</a>
+
+  <header class="hist-header">
+    <span class="pillar-tag bo">Part II — Decide</span>
+    <h1>From EGO to Agentic BO</h1>
+    <p class="hist-dek">Twelve papers, one question repeated in an increasingly complicated setting: you get a handful of real, expensive trials — which one do you run next? This is the story of how that question moved from a 1998 engineering paper about Kriging surrogates to a 2026 system where a language model reformulates the objective mid-campaign, without ever losing the explicit, checkable uncertainty that makes the whole enterprise trustworthy in the first place.</p>
+    <div class="hist-stats">
+      <div class="stat"><div class="n tnum">12</div><div class="l">papers</div></div>
+      <div class="stat"><div class="n tnum">1998–2026</div><div class="l">span</div></div>
+      <div class="stat"><div class="n tnum">3</div><div class="l">modules</div></div>
+    </div>
+  </header>
+
+  <section class="act">
+    <span class="act-eyebrow">Act I — 1998 to 2018</span>
+    <h2>The founding loop</h2>
+    <span class="act-span"><a href="papers/ego.html">Jones, Schonlau &amp; Welch</a> · <a href="papers/spearmint.html">Snoek, Larochelle &amp; Adams</a> · <a href="papers/frazier.html">Frazier</a></span>
+    <div class="act-body">
+      <p><a href="papers/ego.html">Efficient Global Optimization</a> (1998) is the founding template, and it's worth being precise about what it actually contributes: not Expected Improvement itself (which predates the paper), but the complete workflow around it — a space-filling initial design, a stochastic-process (Kriging / Gaussian process) surrogate, leave-one-out cross-validation diagnostics run <em>before</em> trusting the model, EI computed in closed form and optimized exactly via branch and bound, and a stopping rule. The paper is also unusually honest about that stopping rule's limits: across four benchmark functions it reached its stopping condition after 28, 32, 34, and 84 evaluations, but the actual errors at those points (0.2%, 0.1%, 1.7%, 1.9%) show the one-step EI calculation understating how much value remained in continued search — a caveat that recurs, in different clothes, through every later paper in this act.</p>
+      <p><a href="papers/spearmint.html">Spearmint</a> (2012) takes that engineering-simulator template and points it at machine-learning hyperparameter tuning specifically — noisy observations, uncertain GP hyperparameters integrated out via slice sampling rather than point-estimated, an "expected improvement per second" acquisition for evaluations of unequal cost, and "fantasizing" (imagining outcomes for pending parallel jobs) so that asynchronous workers don't duplicate effort. Its headline number is concrete: automated tuning of a CIFAR-10 convolutional network reached <strong>14.98% test error</strong> against a human expert's 18%, via non-obvious settings (asymmetric weight penalties, a learning rate two orders of magnitude smaller) a grid search was unlikely to find.</p>
+      <p><a href="papers/frazier.html">Frazier's 2018 tutorial</a> is where the whole loop gets its clean decision-theoretic vocabulary: a surrogate model, an acquisition function that's really a one-step lookahead approximation to an intractable multi-step planning problem, and — the part worth remembering going forward — a reminder that Expected Improvement, Knowledge Gradient, and entropy-search methods all answer the <em>same</em> question ("what should I sample next") by valuing <em>different</em> things (beating the current best; improving the final recommendation; reducing uncertainty about where the optimum is). Which one is "right" depends entirely on what the terminal decision actually values — a question every later agentic paper in this pillar has to answer too, whether or not it says so explicitly.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act II — 2016 to 2023</span>
+    <h2>Mapping the whole field</h2>
+    <span class="act-span"><a href="papers/shahriari.html">Shahriari, Swersky, Wang, Adams &amp; de Freitas</a> · <a href="papers/garnett.html">Garnett</a></span>
+    <div class="act-body">
+      <p><a href="papers/shahriari.html">"Taking the Human Out of the Loop"</a> (2016) is the field's own mid-course self-assessment, and its most quotable claim runs against a common assumption: the review deliberately prioritizes surrogate-model choice over the long list of competing acquisition functions, concluding directly that "the underlying surrogate can matter more in practice" than which acquisition rule sits on top of it. It also names something worth carrying forward: a "portfolio" strategy that hedges across several acquisition functions during a single run, rather than betting the whole campaign on one being universally best — an early, modest form of meta-decision-making that the LLM-driven systems in Act IV will later do explicitly and much more expansively.</p>
+      <div class="pull bo"><p>"Taking the human out of the loop" has a narrow, specific meaning: the system automates trial selection <em>inside</em> a search space, objective, and constraint set a person still has to define. That boundary — not whether an LLM is present — is the real dividing line this whole pillar keeps testing.</p></div>
+      <p><a href="papers/garnett.html">Garnett's 2023 textbook</a> gives the field its full mathematical grounding — a reusable "Bayesian crank": specify a model, an observation process, a utility, and an action space, and a policy falls out. Its most useful reframing for everything that follows: <strong>stopping is itself an action</strong>, weighed against the same expected-utility logic as every other choice, not a fixed budget or an arbitrary threshold on acquisition value. And its Chapter 11 (batches, costs, constraints, multiple fidelities, freeze-thaw optimization) is the direct conceptual bridge to Act III and Act IV — each extension there is really just a change to the action space or the utility function, inside the same underlying decision-theoretic frame.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act III — 2020 to 2021</span>
+    <h2>Adding causal structure</h2>
+    <span class="act-span"><a href="papers/cbo.html">Aglietti, Lu, Paleyes &amp; González</a> · <a href="papers/dcbo.html">Aglietti, Dhir, González &amp; Damoulas</a></span>
+    <div class="act-body">
+      <p>Ordinary BO treats every input as independently settable — but real systems have causal structure, and setting a variable severs the arrows pointing into it. <a href="papers/cbo.html">Causal Bayesian Optimization</a> (2020) makes this concrete: given a known causal graph, the question isn't just "what values?" but "which variables should we even touch?" Its worked example is genuinely counterintuitive — intervening on a single upstream variable reaches the true optimum, while controlling every available variable actively <em>blocks</em> a beneficial causal pathway and costs twice as much. The graph shrinks an exponential search over subsets down to a small set of "possibly-optimal minimal intervention sets," using do-calculus to turn cheap observational data into an informative GP prior before any expensive intervention is spent confirming it.</p>
+      <p><a href="papers/dcbo.html">Dynamic Causal Bayesian Optimization</a> (2021) extends this across time, where both the causal structure and the optimal action can shift from one step to the next — and where past optimal interventions transfer forward into the current surrogate rather than starting from scratch. Its headline number: DCBO identifies the <em>correct</em> intervention set in <strong>93% of replicates</strong> in its key changing and multivariate test cases, consistently faster than static CBO, adaptive BO, or plain BO. Both papers in this act share the same clean, honestly-stated boundary: the causal graph is assumed known, not learned — a real, current limit, not a detail glossed over.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Act IV — 2023 to 2026</span>
+    <h2>LLMs enter the loop</h2>
+    <span class="act-span">OPRO · LLAMBO · LABO · "Are We There Yet?" · Sara/lenz</span>
+    <div class="act-body">
+      <p>This act is the pillar's real center of gravity, and it's structured as an escalating argument about how much of the classical machinery an LLM should be allowed to replace. <a href="papers/opro.html">OPRO</a> (2023) is the minimal baseline: no surrogate, no explicit uncertainty at all — just a running transcript of (candidate, score) pairs in a prompt, with the LLM proposing what comes next by pattern-matching on that history. It's deliberately not trying to beat gradient methods or specialized solvers; its actual payoff is prompt optimization, where the search space (natural language) is one an LLM has a real prior over and ordinary numeric BO has no natural kernel for. Its most quoted (and most double-edged) result: for one model, the instruction <strong>"Take a deep breath and work on this problem step-by-step"</strong> reached 80.2% accuracy on GSM8K versus 71.8% for "Let's think step by step" — real evidence that wording matters, and no evidence at all for <em>why</em>.</p>
+      <ul class="timeline">
+        <li><span class="t-year">2023</span><span class="t-title"><a href="papers/opro.html">OPRO</a></span><span class="t-note">LLM replaces the entire loop. No surrogate, no calibrated uncertainty — maximum flexibility, minimum structure.</span></li>
+        <li><span class="t-year">2024 · ICLR</span><span class="t-title"><a href="papers/llambo.html">LLAMBO</a></span><span class="t-note">LLM contributes at three specific points (warm start, candidate proposal, score prediction) inside a real BO loop — its own ablation shows the gain is genuinely semantic, not just interpolation, but its GP-free "uncertainty" is prompt-shuffling variance, not a calibrated posterior.</span></li>
+        <li><span class="t-year">2026</span><span class="t-title"><a href="papers/labo.html">LABO</a></span><span class="t-note">Treats the LLM as a cheap, biased multi-fidelity source (Kennedy–O'Hagan model) — a learned discrepancy gate (threshold 0.75) decides when reality is worth paying for. Wins on six real chemistry/materials benchmarks.</span></li>
+        <li><span class="t-year">2025</span><span class="t-title"><a href="papers/arewethere.html">Are We There Yet?</a></span><span class="t-note">The skeptical audit: randomizing the feedback an agent receives barely changes its next proposals — evidence some published "agentic" systems are replaying pretrained priors, not actually updating on evidence.</span></li>
+        <li><span class="t-year">2026</span><span class="t-title"><a href="papers/sara.html">Sara / lenz</a></span><span class="t-note">Full agentic control (reconfigure bounds, objectives, acquisition function mid-run) with a real BoTorch backend as the source of truth — the paper's own most distinctive demo has the agent promote a constraint to a second objective mid-campaign, reusing every prior trial without invalidating them.</span></li>
+      </ul>
+      <p><a href="papers/labo.html">LABO</a> (2026) is arguably the cleanest synthesis point in the whole pillar: it doesn't ask "LLM or surrogate," it builds a formal multi-fidelity model where the LLM is one (cheap, informative, occasionally wrong) fidelity level and a real experiment is another, with a discrepancy gate deciding when the gap between them is large enough to be worth paying for. It has an honest weak point — the trust threshold is empirically tuned, not derived, and a low threshold burns real budget while a high one trusts a wrong LLM too readily — but the framing is a genuinely disciplined answer to the "how much should we trust the language model" question everything else in this act is implicitly wrestling with.</p>
+      <div class="pull bo"><p>Randomly permuting the outcomes an LLM-driven "research agent" receives, and checking whether its next proposals change — <a href="papers/arewethere.html">Gupta, Hartford &amp; Liu's</a> falsification test — is one of the cleanest diagnostic tools in this entire library. It should be the default check applied to every future claim of autonomous, feedback-driven experimentation, agentic BO included.</p></div>
+      <p><a href="papers/sara.html">Sara/lenz</a> (2026) is where the act's argument resolves: give the LLM real control — it can inspect diagnostics, reconfigure the search space, change the objective, respond to new natural-language instructions mid-campaign — but keep an explicit, auditable Bayesian backend as the actual source of truth, so that a change in strategy never invalidates data already collected. Sara performs roughly on par with classical BO (Ax) when there's no useful semantic prior to exploit (a deliberate, reassuring null result — the agentic layer doesn't hurt when it has nothing to add), and its distinctive win is exactly the kind of mid-run reformulation classical BO structurally cannot do on its own: promoting a compute constraint to a second objective partway through a scaling-law study, without discarding a single prior observation.</p>
+    </div>
+  </section>
+
+  <section class="act">
+    <span class="act-eyebrow">Where this leaves you</span>
+    <h2>Flexibility, purchased carefully</h2>
+    <div class="act-body">
+      <p>Read end to end, this pillar's arc is less "LLMs replace Bayesian optimization" and more "the field kept re-deriving the same lesson from Act I in a harder setting each time": a system is only as trustworthy as its ability to say what it doesn't know, and to actually change its mind when the evidence says to. EGO's own stopping rule already understated remaining uncertainty in 1998; OPRO in 2023 has no uncertainty representation to understate; the honest arc from OPRO through LABO to Sara is the field rebuilding that missing piece, one deliberate design choice at a time, while <a href="papers/arewethere.html">"Are We There Yet?"</a> stands as the standing reminder that a fluent explanation is not evidence a system is actually using its evidence. Read <a href="who-decides-history.html">Part III's history</a> next — it's the same argument, at a much larger radius, once the objective itself is no longer a single number to optimize but an open-ended research agenda.</p>
+    </div>
+  </section>
+
+  <nav class="hist-nav">
+    <a href="recognize-history.html"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M13 8H3M7 4L3 8l4 4"/></svg>Part I history: Recognize — SBI</a>
+    <a href="who-decides-history.html">Part III history: Who Decides — Agentic Research<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+  </nav>
+
+  <footer class="hist-footer">
+    <a href="index.html">Learned Intuition</a> · Simulation-Based Inference, Bayesian Optimization &amp; Agentic Research
+  </footer>
+</div>
+
+<script src="assets/theme.js"></script>
+</body>
+</html>
