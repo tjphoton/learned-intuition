@@ -42,14 +42,46 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>LLAMBO inserts an LLM into three specific BO components</h3>
+    <p>Rather than replace the entire loop as <a href="opro.html">OPRO</a> does, LLAMBO uses in-context learning for zero-shot warm starts, candidate generation, and surrogate prediction. The prompt contains a model card, a data card, optimization history, and task instructions. Each component can be used alone or combined into an end-to-end optimizer.</p>
+
+    <h3>Warm starts try to recover correlations from pretraining</h3>
+    <p>The LLM proposes five initial hyperparameter configurations before seeing objective values. Adding dataset metadata improves early regret over no-context prompting and random, Sobol, or Latin-hypercube starts. The LLM's points are less geometrically diverse but show task-dependent correlations among hyperparameters, which the authors interpret as useful encoded prior knowledge.</p>
+
+    <h3>The discriminative surrogate predicts a score distribution by repeated prompting</h3>
+    <p>Historical configurations and scores become few-shot examples. Repeated, shuffled prompts produce an empirical mean and standard deviation for a query. LLAMBO predicts scores better than GP and SMAC baselines in the sparse regime, but the GP has better log predictive density and coverage. The authors are clear that prompt-order shuffling is an effective heuristic, not principled Bayesian uncertainty.</p>
+
+    <h3>The candidate sampler performs target-conditioned inverse prediction</h3>
+    <p>The LLM is asked for configurations likely to attain a desired score, analogous to modeling <em>p(h|s)</em>. A parameter controls how far the target extrapolates beyond the current best. More ambitious targets improve the best candidate but reduce average candidate quality and diversity, creating an exploration control inside the prompt.</p>
+
+    <h3>End-to-end gains concentrate where data are sparse</h3>
+    <p>The main evaluation covers 50 Bayesmark hyperparameter tasks, including public, proprietary, and synthetic datasets, with five random seeds and 25 post-initialization trials. LLAMBO has the best average regret among GP-DKL, scikit-optimize GP, Optuna TPE, and SMAC3, with its clearest advantage early in the run. Extra HPOBench results appear in the appendix.</p>
+
+    <h3>The prior ablation supports the paper's mechanism claim</h3>
+    <p>Removing dataset descriptions and replacing meaningful hyperparameter names with generic labels weakens prediction and calibration. That result suggests the LLM contributes semantic prior knowledge, not only generic interpolation over a serialized table. It also means performance may depend on how familiar and well-named the domain is.</p>
+
+    <h3>Calibration, cost, and scope remain open limits</h3>
+    <p>LLM inference is much more computationally expensive than conventional BO, results depend on the chosen model, uncertainty is weaker than a GP's, and the study focuses on low-dimensional hyperparameter tuning. The authors suggest using LLAMBO only in early trials or for one component when black-box evaluations are expensive enough to justify the overhead.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>LLAMBO asks where an LLM's learned intuition can help an ordinary BO pipeline. Its answer is: before the first trial, while proposing candidates, and while predicting how candidates will perform.</p>
+
+    <h4>1. Names carry information</h4>
+    <p>"Learning rate" tells a pretrained model more than "X3." Dataset size, feature types, and model family also suggest plausible settings. LLAMBO turns that informal background knowledge into an initial search bias.</p>
+
+    <h4>2. Better point predictions do not guarantee better uncertainty</h4>
+    <p>The LLM often predicts the score well from very few examples. But repeating prompts and measuring variation is not the same as a calibrated posterior. The GP remains stronger on uncertainty metrics, which is exactly the quantity BO needs for exploration.</p>
+
+    <h4>3. The strongest use may be temporary</h4>
+    <p>Semantic priors matter most before the experiment has produced much evidence. Later, a cheaper statistical surrogate can learn directly from the task. This suggests a handoff rather than an all-LLM optimizer.</p>
+
+    <h3>Going deeper: a precise contrast with amortized inference</h3>
+    <p>PFNs learn a declared synthetic prior and expose a predictive distribution after specialized training. LLAMBO borrows an undeclared prior from general web-scale pretraining and estimates uncertainty through repeated prompts. Both perform in-context prediction, but only the PFN route gives the designer direct control over the training distribution. This difference is central when domain priors must be audited.</p>
     <!-- DISCUSSION:END -->
   </section>
 
