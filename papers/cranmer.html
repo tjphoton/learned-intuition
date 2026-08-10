@@ -82,6 +82,22 @@
 
     <h3>Open question to carry forward</h3>
     <p>The paper flags calibration as unresolved. By the time we get to Hermans et al. (2022) in Module 03, the answer is: it's worse than flagged here — essentially all benchmarked SBI algorithms produce overconfident posteriors in at least one setting, especially at small simulation budgets. Worth re-reading this paper's diagnostics section after Module 03 to see how much of that was already anticipated versus genuinely surprising.</p>
+
+    <h3>"Likelihood-free" is a slight misnomer</h3>
+    <p>The likelihood isn't absent — every latent step inside the simulator (each decay, each detector interaction) has a known conditional probability. What's intractable is <em>marginalizing</em> over all those latent draws to get the density of the final observable x. That distinction matters: because the simulator's internal structure is a chain of tractable conditionals, it's sometimes possible to extract more than raw (θ, x) samples from it — see "mining gold" below.</p>
+
+    <h3>NPE vs. NLE vs. NRE — the trade-off that bites in practice</h3>
+    <ul>
+      <li><strong>NPE</strong> bakes a specific prior into training. Change the prior later and you generally have to retrain. In exchange, you get true amortization — one trained network, instant posteriors for any new x.</li>
+      <li><strong>NLE</strong> learns p(x|θ) with no prior baked in, so priors can be swapped freely at inference time by re-running MCMC on the surrogate — the prior-sensitivity-analysis workflow metabeta later cites as a selling point. The cost: you pay a fresh MCMC run every time, so it isn't free amortization the way NPE is.</li>
+      <li><strong>NRE</strong> turns the problem into binary classification (joint vs. marginal samples) — often an easier learning problem than fitting a full density, and it borrows directly from GAN-style discriminator training. The cost: a likelihood ratio isn't a normalized posterior on its own, so it still needs to be embedded in a sampler downstream.</li>
+    </ul>
+
+    <h3>The leakage problem: why "sequential" took several iterations to get right</h3>
+    <p>The first sequential NPE method (SNPE-A) refined its proposal toward the observed data, but this broke the guarantee that its output was a valid posterior — probability mass could "leak" outside the prior's support. SNPE-B fixed it by importance-weighting the training loss; SNPE-C ("APT") fixed it more cleanly with an atomic-proposal trick. It's a preview of a pattern that recurs through the whole library: a fast neural method ships, then a follow-up paper is needed to fix a subtle statistical leak the first pass didn't catch — the same shape as metabeta's post-hoc conformal correction and the entire Module 03 calibration thread.</p>
+
+    <h3>Mining gold: extracting more than samples from a tractable simulator</h3>
+    <p>Because the simulator is a chain of known conditional probabilities even when their product is intractable to marginalize, you can sometimes compute an unbiased estimate of the joint likelihood ratio or the score directly from a single run — for free, as a byproduct of the simulation rather than something a network has to infer purely from input-output pairs. Training the neural surrogate against this richer signal (regression to the score/ratio, not just classification or density-fitting on samples) is markedly more sample-efficient. This is Cranmer and Brehmer's own line of work (the "mining gold from implicit models" methods, e.g. RASCAL/ALICES) and it's the clearest illustration in the paper that simulation-based inference isn't just "throw a neural net at black-box samples" — exploiting whatever structure the simulator exposes is where a lot of the real efficiency gains come from.</p>
     <!-- DISCUSSION:END -->
   </section>
 
