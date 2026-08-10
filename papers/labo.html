@@ -42,14 +42,46 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>LABO treats an LLM as a cheap, biased information source</h3>
+    <p>LLM-Accelerated Bayesian Optimization casts model predictions as low-fidelity evaluations and physical experiments as real-fidelity evaluations. The aim is not to make the LLM the final judge. It is to query the LLM broadly and cheaply, then spend laboratory budget only where the gap between model intuition and reality remains uncertain.</p>
+
+    <h3>The joint surrogate separates guidance from discrepancy</h3>
+    <p>Using the Kennedy-O'Hagan multi-fidelity model, LABO writes the real objective as <em>f<sub>R</sub>(x) = rho f<sub>L</sub>(x) + delta(x)</em>. One GP learns the LLM-fidelity surface, a scale aligns it with real outcomes, and a second GP learns the residual discrepancy from paired LLM and experimental observations. This structure can correct systematic bias rather than treating synthetic predictions as ground truth.</p>
+
+    <h3>A discrepancy gate decides when reality is required</h3>
+    <p>For each BO candidate, LABO measures how much of the real-fidelity predictive variance comes from the discrepancy process. If that ratio exceeds a threshold, the system runs the expensive experiment. Otherwise the cheap LLM prediction updates the low-fidelity model. The selected threshold, 0.75 in the main experiments, controls how readily the method trusts the LLM.</p>
+
+    <h3>Warm-up combines promising points with broad coverage</h3>
+    <p>The LLM proposes promising initial points for real experiments. LABO also queries 50 Latin-hypercube points at LLM fidelity to build a coarse global map before real-fidelity optimization. During the loop, q-UCB selects candidate batches, every candidate gets an LLM prediction, and only gated candidates consume experimental budget.</p>
+
+    <h3>The theorem is conditional but more substantial than a heuristic claim</h3>
+    <p>Under the joint-GP and KOH assumptions, the cumulative-regret bound separates real queries in the limiting high-discrepancy region, transient real queries elsewhere, and low-cost LLM queries. If the LLM signal is informative, real exploration concentrates in a smaller effective region. If it is misleading, discrepancy uncertainty drives more real measurements. The guarantee depends on the assumed covariance structure and stabilized gate.</p>
+
+    <h3>Six scientific formulation benchmarks favor selective experimentation</h3>
+    <p>The tasks cover covalent organic frameworks, fullerene reactions, photovoltaic blends, P3HT composites, flow batteries, and a 20-dimensional sandwich formulation. With equal real-fidelity budgets, LABO outperforms vanilla BO, LLAMBO, BOPRO, and CAKE across the suite. Ablations show that identical initialization is not enough to explain the gain and random pseudo-fidelity values make performance worse.</p>
+
+    <h3>The threshold exposes the central failure trade-off</h3>
+    <p>A low gate threshold overuses expensive experiments and loses the benefit of broad cheap guidance. A high threshold trusts inaccurate LLM predictions too often. The best threshold is empirical, task complexity changes the LLM-to-real query ratio, and stronger reasoning models help only modestly. A real deployment still needs conservative monitoring for regions where both the LLM and discrepancy model are confidently wrong.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>LABO treats the LLM like a fast, fallible simulator. Ask it many cheap questions, learn where its answers disagree with reality, and reserve the laboratory for those uncertain regions.</p>
+
+    <h4>1. Cheap predictions become useful only after calibration</h4>
+    <p>An LLM score by itself is not evidence. Paired real results reveal its scale and bias. The residual GP learns where correction is needed, turning informal prior knowledge into a testable multi-fidelity model.</p>
+
+    <h4>2. The gate is a trust decision</h4>
+    <p>When most uncertainty comes from not knowing the LLM's error, run the real experiment. When the learned discrepancy is small and stable, accept cheap guidance. This is more disciplined than adding LLM-generated pseudo-data to the main dataset without labels that distinguish its source.</p>
+
+    <h4>3. Robustness still depends on discovering the error</h4>
+    <p>If early real measurements reveal a bad LLM region, the gate can adapt. If the initial paired data miss a systematic failure, both low-fidelity and discrepancy models may look falsely confident. Broad real checks remain important even with a formal gate.</p>
+
+    <h3>Going deeper: the cleanest bridge between BO and learned intuition</h3>
+    <p>LABO makes the project's core idea literal. A pretrained model supplies quick recognition; a Bayesian surrogate tracks uncertainty; selective experiments correct the model and drive decisions. The architecture also suggests how an amortized SBI model could replace the general LLM as the low-fidelity source when a domain simulator can provide a more auditable prior.</p>
     <!-- DISCUSSION:END -->
   </section>
 
