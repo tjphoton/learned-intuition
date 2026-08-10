@@ -42,14 +42,51 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>The move: one umbrella term for three literatures</h3>
+    <p>Physics/astronomy calls this "simulation-based inference" (SBI). Statistics/cognitive science calls it "amortized Bayesian inference" (ABI). AutoML calls it "prior-data fitted networks" (PFNs) / in-context learning. All three simulate training data, train a neural network on it, and reuse that network fast on new real data — the same recipe from <a href="cranmer.html">Cranmer et al.</a>, discovered three times under three names. This paper's job is to be the phrasebook: it uses "amortized inference" as the neutral term and shows the three lineages are one idea, without picking a side.</p>
+
+    <h3>Neural Bayes estimators: a point-estimate cousin of NPE</h3>
+    <p>Cranmer's NPE trains a network to output a full posterior distribution. This paper centers a related but narrower target: a <strong>neural Bayes estimator</strong> — a network trained to output one specific number (or a small set of numbers) that best answers the question you actually have, rather than the whole distribution. Same training recipe (simulate (θ, x) pairs, train on them), different target.</p>
+
+    <h3>The loss function decides what "best" means</h3>
+    <p>What the network is trained to output depends entirely on how you penalize wrong guesses (the <strong>loss function</strong>). This is decision theory, not new math: penalize squared distance from the truth, and the optimal strategy is to output the posterior mean. Penalize asymmetrically (e.g. "how often is my guess above vs. below the truth"), and the optimal strategy is to output a specific posterior quantile — which is exactly how you get calibrated credible intervals without ever constructing the full density. Pick the loss, and you've picked what kind of estimator falls out.</p>
+
+    <h3>Permutation-invariant architectures for exchangeable data</h3>
+    <p>A recurring architectural theme (reflecting the authors' home field of spatial statistics): when your data is a set of measurements that could arrive in any order — sensor readings at scattered locations, replicate observations — the network shouldn't care what order they're fed in, and it should handle a different number of them on different days. The standard fix is a permutation-invariant design: embed each observation independently, then pool (sum/average) those embeddings before the final layers, so shuffling the inputs — or having more or fewer of them — doesn't change the output. This is the same structural idea behind metabeta's local/global summary networks, generalized.</p>
+
+    <h3>A worked example ties the recipe together end to end</h3>
+    <p>Per the survey's own framing, it walks through one concrete running example — defining a prior, simulating data, training the estimator, validating it — rather than staying purely abstract. That worked example is worth tracing by hand once we open the PDF; treat the specifics here as a map to verify against the primary source, not a substitute for it.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>This builds directly on the vocabulary from <a href="cranmer.html">Cranmer et al.</a> — prior, likelihood, posterior, simulator, and the idea of training a network on simulated examples instead of hand-deriving a formula. If any of those feel shaky, that page's walkthrough is the place to revisit first.</p>
+
+    <h4>1. Same idea, three different accents</h4>
+    <p>Imagine three separate research communities independently discovering the same trick — simulate a huge pile of examples, train a network on them, reuse the trained network to skip the slow calculation next time — and each community giving it its own name because they don't read each other's journals. That's genuinely what happened: physicists call it "simulation-based inference," statisticians call it "amortized Bayesian inference," and AutoML/ML researchers call it "prior-data fitted networks." This paper's whole point is to say: stop treating these as three different things. They're the same recipe. It picks "amortized inference" as a neutral umbrella term and shows how each lineage's papers map onto it.</p>
+    <p>Why that matters practically: a paper solving your exact problem might be titled using any of the three vocabularies, and without knowing they're the same family, you'd never find it by searching only one term.</p>
+
+    <h4>2. Sometimes you don't need the whole shape — just a good guess</h4>
+    <p>Recall NPE from Cranmer's paper: train a network to output the full posterior — the whole shape of "here's how plausible every possible θ is." That's powerful, but it's also more than you sometimes need. If all you actually want is "give me your single best guess for θ," or "give me a range I'm 95% confident contains the truth," you don't need the entire distribution — you need one number, or a couple of numbers.</p>
+    <p>A network trained to output just that — the single best answer, not the whole distribution — is called a <strong>neural Bayes estimator</strong>. Same training setup as before (simulate tons of (θ, x) examples, train on them), just aimed at a smaller, more specific target.</p>
+
+    <h4>3. How does the network know what counts as "best"?</h4>
+    <p>This is where it gets neat, and it's just common sense once you see it. Imagine a game show where you have to guess a hidden number, and you get penalized based on how wrong you are. If the penalty is "your error, squared" — meaning big misses hurt a lot more than small ones — it turns out your smartest strategy, averaged over everything you believe is possible, is to guess the <em>average</em> of all the possibilities you think are plausible (weighted by how likely each one is). That average is exactly the posterior mean.</p>
+    <p>Now imagine a different penalty: "you lose more if you guess too high than if you guess too low." Under that penalty, your smartest strategy shifts — you should guess a bit lower than the average, specifically some particular percentile of what you think is possible. That's how you get a calibrated lower bound on a confidence range, just by changing what you're penalized for.</p>
+    <p>The paper's insight: you can design the "penalty" (called a <strong>loss function</strong>) to match whatever question you actually care about, and whatever penalty you pick determines exactly what the trained network learns to output — a mean, a median, a 5th percentile, whatever. You're not stuck with one fixed kind of answer.</p>
+
+    <h4>4. Data that comes in an unordered pile</h4>
+    <p>Picture measuring temperature at 50 weather stations scattered across a region. If you relabeled the stations — called station #1 "station #37" and vice versa — your estimate of, say, the regional average temperature shouldn't change at all. The order and labeling are meaningless; only the collection of measurements matters. And tomorrow, maybe you only have readings from 43 stations, not 50 — the network needs to handle that too, without retraining.</p>
+    <p>Networks aren't naturally built this way — a plain neural network fed a list of 50 numbers usually does care about their order. The fix here: process each measurement on its own first (each one gets its own little "impression"), then combine all those impressions with a simple operation like a sum or average — which doesn't care about order — before making the final decision. That guarantees the answer is blind to ordering and can flex to different counts of inputs. This exact idea — measure things independently, then pool — is what metabeta's "local summary network, then global summary network" design was doing too; this paper names it as a general architectural principle rather than a one-off trick.</p>
+
+    <h4>5. Why this paper earns its spot as the second stop</h4>
+    <p>Cranmer's paper gave the taxonomy (NPE/NLE/NRE) and the core problem (likelihood-free inference). This paper takes one branch of that taxonomy — "learn something from simulated examples" — and shows it's broader than "learn the whole posterior": you can aim the same machinery at a point estimate, a quantile, a whole distribution, whatever loss function you choose, and it's all one family regardless of which research community's name you first encountered it under. It's less about a new technique and more about correctly filing everything else you'll read under one mental folder instead of three.</p>
+
+    <h3>Going deeper (revisit once the basics above feel solid)</h3>
+    <p class="placeholder">— once we open the actual PDF together, this is where the worked example, the precise loss-function formalism, and any results specific to spatial/extreme-value applications go, verified against the primary source rather than general recollection. —</p>
     <!-- DISCUSSION:END -->
   </section>
 
