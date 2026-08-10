@@ -42,14 +42,54 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>What version 2 changes</h3>
+    <p>The AI Scientist-v2 removes the hand-written experiment templates used by version 1. It starts from a broad topic, searches literature, writes its own initial code, explores experiments, builds figures, and writes a paper. It adds an experiment manager, parallel tree search, repeated trials, and vision-language feedback on plots and captions.</p>
+
+    <h3>Research is divided into four stages</h3>
+    <p>The manager moves through preliminary feasibility, hyperparameter tuning, execution of the main research agenda, and ablation studies. At the end of each stage, an LLM selects a best node to seed the next one and requests replications with new random seeds. This is a stronger experimental structure than version 1's sequence of at most five code revisions.</p>
+
+    <h3>The tree stores both progress and failure</h3>
+    <p>Each node contains a plan, code, metrics, runtime, error trace, plots, and textual and visual critiques. Working nodes can be refined, while failed nodes can be debugged. Special nodes tune hyperparameters, run ablations, replicate results, or aggregate statistics. Parallel branches let the system preserve alternatives instead of making every later experiment depend on one early choice.</p>
+
+    <h3>Vision closes one gap but not all of them</h3>
+    <p>A vision-language model checks labels, legends, figure-caption agreement, and duplication during experimentation and manuscript revision. This addresses version 1's inability to see its own figures. Yet the accepted paper still contained an incorrect figure caption and a written claim contradicted by one plot, so visual access did not ensure correct interpretation.</p>
+
+    <h3>The peer-review experiment was controlled</h3>
+    <p>Three generated papers entered blind review among 43 submissions to the ICLR 2025 workshop “I Can't Believe It's Not Better.” Reviewers knew some submissions might be AI-generated and could opt out, but did not know which ones. One paper received scores of 6, 6, and 7, enough for workshop acceptance. It was withdrawn under a prior agreement and did not enter the published record.</p>
+
+    <h3>Humans still performed meta-selection</h3>
+    <p>The system generated about forty ideas from two prompts. Humans chose three ideas to fund, ran the full pipeline multiple times with different seeds, and selected the best complete manuscript for each idea. They did not edit the selected code, results, figures, or prose. The individual artifact was autonomously produced, but the successful submission was selected from a larger human-managed portfolio.</p>
+
+    <h3>The accepted result was a useful negative result</h3>
+    <p>The paper tested whether penalizing changes between successive input embeddings would improve compositional generalization in an LSTM. It did not, and sometimes hurt training. Workshop reviewers valued the clear negative finding. They also wanted better motivation, more architectures, and broader tasks.</p>
+
+    <h3>Internal audit found problems peer review missed</h3>
+    <p>The system blurred input embeddings and hidden states, omitted key references, misread a validation-loss figure, and made a claim that another figure contradicted. More seriously, the authors found about 57% overlap between training and test data. They judged the paper a borderline workshop contribution but below main-conference rigor. Only one of three submissions cleared even the workshop threshold.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough</h3>
+
+    <h4>1. From one path to a research tree</h4>
+    <p>Version 1 could get trapped by a weak early experiment because every change extended the last one. Version 2 tries several branches, fixes some failures, and advances the strongest branch at each stage. This is closer to managing a portfolio of experiments, though an LLM's score still decides which evidence survives.</p>
+
+    <h4>2. Removing the template increases both freedom and risk</h4>
+    <p>The system no longer needs a person to prepare working baseline code for every topic. It can address a wider set of machine-learning questions. But it must now choose datasets, construct splits, implement baselines, and define metrics itself. The train-test overlap shows how a basic setup error can undermine everything downstream.</p>
+
+    <h4>3. Peer-review acceptance is a real but narrow milestone</h4>
+    <p>External reviewers found one paper interesting enough for a workshop devoted to negative and surprising results. That is better evidence than version 1 grading its own papers. It is still one selected paper, at a venue designed for exploratory work, after human idea and run selection. It does not show consistent conference-level science.</p>
+
+    <h4>4. A negative result can be scientifically useful</h4>
+    <p>The accepted paper did not need a headline performance gain. It showed that a plausible regularizer failed and tried to explain why. This is healthy in principle. But a negative result is trustworthy only when the experiment is well motivated and the data split, implementation, and interpretation survive audit.</p>
+
+    <h3>Connection to version 1</h3>
+    <p>Version 2 directly addresses three earlier weaknesses: dependence on topic-specific templates, shallow linear experimentation, and blindness to figures. The remaining errors show that better orchestration cannot substitute for scientific checks. Autonomy moved outward to more decisions, while reliability did not rise evenly with it.</p>
+
+    <h3>The key takeaway</h3>
+    <p>The strongest evidence here is that an untouched AI-generated artifact can be judged workshop-worthy by outside reviewers. The strongest warning is that later code inspection found a major dataset issue. Passing peer review and being scientifically sound overlap, but they are not identical objectives.</p>
     <!-- DISCUSSION:END -->
   </section>
 
