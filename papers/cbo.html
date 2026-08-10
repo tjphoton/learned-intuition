@@ -42,14 +42,43 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>Classical BO assumes every input can be set independently</h3>
+    <p>Aglietti et al. point out that ordinary BO intervenes on all inputs at once, breaking the causal links among them. In a real system, setting a smaller subset may let useful effects propagate through the graph, produce a better outcome, and cost less. Causal Global Optimization therefore searches over both the intervention set and its values.</p>
+
+    <h3>The graph shrinks an exponential action space</h3>
+    <p>With manipulative variables <em>X</em>, a naive search considers every subset in the power set. The paper uses graph structure to identify Minimal Intervention Sets and the smaller collection of Possibly-Optimal Minimal Intervention Sets. This "causal intrinsic dimensionality" can be far below the number of recorded variables. The graph determines which experiments are redundant before any expensive intervention is run.</p>
+
+    <h3>Observational data become a causal GP prior</h3>
+    <p>For each candidate intervention set, do-calculus estimates the expected outcome and its uncertainty from observational data. Those estimates define the GP prior mean and add an uncertainty term to its kernel. Real interventional observations then update that prior. The result is a separate response surface for each intervention set, informed by passive data but corrected by experiments.</p>
+
+    <h3>Causal EI compares different intervention spaces and costs</h3>
+    <p>The acquisition is Expected Improvement divided by intervention cost. CBO maximizes it within each candidate intervention set, then compares those maxima to choose both the variables and values to manipulate. An epsilon-greedy mechanism also chooses between collecting another passive observation and performing an intervention, because more observational coverage can improve the do-calculus estimates.</p>
+
+    <h3>The experiments show why "control everything" can be worse</h3>
+    <p>In the toy problem, intervening only on <em>Z</em> reaches the optimum while ordinary BO also manipulates <em>X</em> and costs twice as much. In the larger synthetic graph, manipulating all variables blocks beneficial causal pathways. CBO finds the optimum at <em>{B,D} = {-5.0, 3.28}</em>; changing an additional variable can lower the outcome. The ecology example has five manipulable variables but permits at most three simultaneous interventions, so ordinary BO is not even a valid strategy.</p>
+
+    <h3>The causal graph is assumed known</h3>
+    <p>This is the method's strongest boundary. The graph may include unobserved confounders when the relevant effects remain identifiable, but CBO does not learn the graph or propagate graph uncertainty. Its theoretical guarantees mostly inherit from do-calculus, and the paper leaves acquisition-level regret analysis and causal discovery to future work.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>Ordinary BO asks, "What values should all the knobs have?" CBO first asks, "Which knobs should we touch at all?" A causal graph tells it when leaving a variable alone allows the system to do useful work for free.</p>
+
+    <h4>1. Observation and intervention answer different questions</h4>
+    <p>Seeing that two variables move together does not tell us what happens when one is forcibly set. Do-calculus states when observational data can still estimate that intervention. CBO uses those estimates as prior information, then spends real interventions where passive data are not enough.</p>
+
+    <h4>2. More control is not always more power</h4>
+    <p>Setting a downstream variable cuts its incoming causal arrows. That can block a beneficial effect from an upstream action. The best intervention may therefore touch fewer variables than the engineer is able to control.</p>
+
+    <h4>3. The graph is both knowledge and risk</h4>
+    <p>A correct graph saves experiments and reveals cheaper actions. A wrong graph can remove the true optimum from the search or create a misleading prior. The efficiency gain and the model-risk exposure come from the same source.</p>
+
+    <h3>Going deeper: the connection back to Causal SBI</h3>
+    <p><a href="dopfn.html">Do-PFN</a> and <a href="causalpfn.html">CausalPFN</a> amortize answers to causal queries across simulated graphs. CBO repeatedly estimates intervention-response functions inside one known graph to choose an action. A natural synthesis would use an amortized causal model as CBO's uncertain surrogate while preserving explicit intervention costs and graph checks.</p>
     <!-- DISCUSSION:END -->
   </section>
 
