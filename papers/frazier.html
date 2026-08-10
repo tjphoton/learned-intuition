@@ -42,14 +42,46 @@
   <section class="block">
     <span class="eyebrow">Study Notes</span>
     <!-- NOTES:START -->
-    <p class="placeholder">— no notes yet — read the paper, then come back and we'll fill this in together. —</p>
+    <h3>A compact statement of when Bayesian optimization fits</h3>
+    <p>Frazier defines the standard BO problem as global optimization of a continuous, derivative-free black box, usually in no more than about 20 dimensions, with only a few hundred affordable evaluations. Cost may mean time, money, materials, or burden on a human subject. This scope boundary matters: BO is not a default replacement for gradient methods when evaluations are cheap or the objective has exploitable structure.</p>
+
+    <h3>The loop has two parts and one final decision</h3>
+    <p>A Bayesian model, usually a Gaussian process, describes plausible objective functions. An acquisition function values the next observation. After the budget is spent, the system must still recommend either the best evaluated point or the point with the largest posterior mean. That last choice is easy in noise-free settings but becomes a real decision under noise.</p>
+
+    <h3>EI, Knowledge Gradient, and entropy search value different outcomes</h3>
+    <p>Expected Improvement values the chance and size of beating the best observed value at the sampled point. Knowledge Gradient (KG) values the expected increase in the best posterior-mean recommendation anywhere after the sample. Entropy Search and Predictive Entropy Search value expected information about the optimizer's location. These objectives agree in simple cases but diverge when observations are noisy, indirect, or taken at a different fidelity.</p>
+
+    <h3>The noisy-EI treatment is a specific contribution</h3>
+    <p>Ordinary EI assumes the best observed value is known exactly. Under noise, Frazier derives a decision-theoretic generalization based on the expected improvement in the value of the final implementation decision, rather than comparing against a noisy incumbent as if it were truth. KG, ES, and PES already extend naturally to noise because they value a posterior change rather than a raw observation.</p>
+
+    <h3>"Exotic" BO means the observation process is part of the decision</h3>
+    <p>The tutorial covers parallel evaluations, unknown constraints, multiple fidelities and information sources, random environmental conditions, related tasks, and derivative observations. In each case the action is richer than choosing <em>x</em>. It may include a source, fidelity, batch, or environment. This is the conceptual bridge from selecting a point to designing an experiment.</p>
+
+    <h3>Acquisition functions are one-step approximations to a harder control problem</h3>
+    <p>The ideal policy would optimize the entire sequence of future measurements and the final reward. That dynamic program is usually intractable. EI, KG, and information-based rules are practical one-step lookaheads with different terminal utilities. Reading them this way clarifies that there is no universally best acquisition function; the right choice depends on what the final decision values.</p>
+
+    <h3>The paper is explicit about practical limits</h3>
+    <p>Standard GP computation scales cubically with observations, acquisition optimization becomes hard in high dimensions, and most convergence theory assumes fixed GP hyperparameters that practice does not. Frazier points toward scalable GPs, better high-dimensional structure, and tighter connections between theory and deployed algorithms as open directions.</p>
     <!-- NOTES:END -->
   </section>
 
   <section class="block">
     <span class="eyebrow">Discussion, Section by Section</span>
     <!-- DISCUSSION:START -->
-    <p class="placeholder">— not yet discussed — ask for a walkthrough of this paper any time, and this section fills in section by section as we go. —</p>
+    <h3>Plain-English walkthrough (start here)</h3>
+    <p>This tutorial turns the examples in <a href="ego.html">EGO</a> and <a href="spearmint.html">Spearmint</a> into a clean decision framework. A model says what might be true. An acquisition rule says which uncertainty is worth paying to reduce.</p>
+
+    <h4>1. First define what happens when the budget ends</h4>
+    <p>If you must return a tested option, EI is natural. If you may recommend any option based on the model, KG matches that decision better. If the main goal is to locate the optimizer, an entropy rule may fit. The next experiment only has meaning relative to the final action.</p>
+
+    <h4>2. Information and improvement are not the same</h4>
+    <p>A measurement can be valuable without producing a new best observed result. It may change beliefs elsewhere, rule out a broad region, or improve a final recommendation. KG and entropy search make that indirect value visible.</p>
+
+    <h4>3. Real experiments have more than one coordinate</h4>
+    <p>You may choose what to test, how accurately to test it, which lab or simulator to use, and whether to launch several tests together. Once those choices enter the action, BO begins to look like experimental design and resource allocation, not a narrow optimizer.</p>
+
+    <h3>Going deeper: a useful lens for every later agent paper</h3>
+    <p>Ask three questions of each system in Part III: What posterior or surrogate represents uncertainty? What utility does the next action optimize? What is the terminal decision? If a paper cannot answer those questions, its agent may be active without being decision-theoretically clear. Frazier supplies the vocabulary for spotting that gap.</p>
     <!-- DISCUSSION:END -->
   </section>
 
